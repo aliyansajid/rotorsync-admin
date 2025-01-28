@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "466337035855",
+    "project_id": "rotor-sync-admin",
+    "storage_bucket": "rotor-sync-admin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466337035855:android:e789f581651c9705bf5c3a",
+        "android_client_info": {
+          "package_name": "com.headingshelicopters.rotorsync_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIv4jxyO-uc7OwQp9SDfiDmVyn9gtisW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
