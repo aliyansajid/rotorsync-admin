@@ -33,6 +33,8 @@ class LoginScreenState extends State<LoginScreen> {
     }
 
     try {
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -42,6 +44,8 @@ class LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = false;
       });
+
+      // Navigate to home screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),

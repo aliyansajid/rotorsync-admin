@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'mqtt_screen.dart';
+import 'package:rotorsync_admin/screens/login_screen.dart';
+import 'package:rotorsync_admin/screens/mqtt_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -128,7 +129,7 @@ class SettingsScreen extends StatelessWidget {
                 },
               ),
               const Spacer(),
-              _buildLogoutButton(),
+              _buildLogoutButton(context),
             ],
           );
         },
@@ -167,7 +168,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildLogoutButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SizedBox(
@@ -181,7 +182,7 @@ class SettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          onPressed: () {},
+          onPressed: () => _logout(context),
           child: const Text(
             "Logout",
             style: TextStyle(
@@ -191,6 +192,17 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+
+    // Navigate to LoginScreen and clear navigation stack
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
     );
   }
 }
