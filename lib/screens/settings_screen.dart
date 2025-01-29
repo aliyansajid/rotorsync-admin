@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rotorsync_admin/screens/login_screen.dart';
-import 'package:rotorsync_admin/screens/mqtt_screen.dart';
+import 'package:rotorsync_admin/screens/mqtt_configuration.dart';
+import 'package:rotorsync_admin/screens/user_profile.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -116,7 +117,12 @@ class SettingsScreen extends StatelessWidget {
               _buildSettingsOption(
                 icon: Icons.person,
                 title: "Profile",
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfileScreen()),
+                  );
+                },
               ),
               _buildSettingsOption(
                 icon: Icons.cloud,
