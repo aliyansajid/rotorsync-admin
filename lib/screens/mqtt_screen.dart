@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import '../services/mqtt_service.dart'; // Import the MQTTService class
+import '../services/mqtt_service.dart';
 
 class MqttScreen extends StatefulWidget {
-  const MqttScreen({Key? key}) : super(key: key);
+  const MqttScreen({super.key});
 
   @override
-  _MqttScreenState createState() => _MqttScreenState();
+  MqttScreenState createState() => MqttScreenState();
 }
 
-class _MqttScreenState extends State<MqttScreen> {
+class MqttScreenState extends State<MqttScreen> {
   final TextEditingController brokerController = TextEditingController();
   final TextEditingController portController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
@@ -16,29 +16,37 @@ class _MqttScreenState extends State<MqttScreen> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _fieldsDisabled = false;
 
   final MQTTService _mqttService = MQTTService();
 
   @override
   void initState() {
     super.initState();
-    _updateConnectionStatus();
+    _loadSavedCredentials();
   }
 
-  void _updateConnectionStatus() {
+  Future<void> _loadSavedCredentials() async {
+    await _mqttService.loadSavedCredentials();
     setState(() {
-      _isLoading = false;
+      brokerController.text = _mqttService.credentials['broker'] ?? '';
+      portController.text = _mqttService.credentials['port'].toString();
+      usernameController.text = _mqttService.credentials['username'] ?? '';
+      passwordController.text = _mqttService.credentials['password'] ?? '';
+      _fieldsDisabled = _mqttService.isConnected;
     });
   }
 
   Future<void> connectMQTT() async {
     setState(() {
       _isLoading = true;
+      _fieldsDisabled = true;
     });
 
     if (!_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = false;
+        _fieldsDisabled = false;
       });
       return;
     }
@@ -49,12 +57,17 @@ class _MqttScreenState extends State<MqttScreen> {
     String password = passwordController.text.trim();
 
     await _mqttService.connect(broker, port, username, password);
-    _updateConnectionStatus();
+    setState(() {
+      _isLoading = false;
+      _fieldsDisabled = _mqttService.isConnected;
+    });
   }
 
   void disconnectMQTT() {
     _mqttService.disconnect();
-    _updateConnectionStatus();
+    setState(() {
+      _fieldsDisabled = false;
+    });
   }
 
   @override
@@ -64,14 +77,13 @@ class _MqttScreenState extends State<MqttScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text("MQTT Connection"),
+          title: const Text("MQTT Configuration"),
           backgroundColor: const Color(0xFF1D61E7),
           foregroundColor: Colors.white,
         ),
         body: SingleChildScrollView(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -79,54 +91,29 @@ class _MqttScreenState extends State<MqttScreen> {
                 children: [
                   const Text(
                     "Please enter your MQTT broker details to establish a connection.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
                   _buildLabel("Broker URL"),
                   const SizedBox(height: 8),
                   _buildInputField(
-                    controller: brokerController,
-                    hintText: "broker.hivemq.com",
-                    keyboardType: TextInputType.url,
-                    enabled: !_mqttService.isConnected,
-                    validator: (value) =>
-                        value!.isEmpty ? "Broker URL is required." : null,
-                  ),
+                      brokerController, "broker.hivemq.com", !_fieldsDisabled),
                   const SizedBox(height: 16),
                   _buildLabel("Port"),
                   const SizedBox(height: 8),
-                  _buildInputField(
-                    controller: portController,
-                    hintText: "1883",
-                    keyboardType: TextInputType.number,
-                    enabled: !_mqttService.isConnected,
-                    validator: (value) =>
-                        value!.isEmpty ? "Port is required." : null,
-                  ),
+                  _buildInputField(portController, "1883", !_fieldsDisabled,
+                      isNumber: true),
                   const SizedBox(height: 16),
                   _buildLabel("Username"),
                   const SizedBox(height: 8),
                   _buildInputField(
-                    controller: usernameController,
-                    hintText: "Enter your username",
-                    enabled: !_mqttService.isConnected,
-                    validator: (value) =>
-                        value!.isEmpty ? "Username is required." : null,
-                  ),
+                      usernameController, "john", !_fieldsDisabled),
                   const SizedBox(height: 16),
                   _buildLabel("Password"),
                   const SizedBox(height: 8),
                   _buildInputField(
-                    controller: passwordController,
-                    hintText: "••••••••",
-                    isPassword: true,
-                    enabled: !_mqttService.isConnected,
-                    validator: (value) =>
-                        value!.isEmpty ? "Password is required." : null,
-                  ),
+                      passwordController, "••••••••", !_fieldsDisabled,
+                      isPassword: true),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -134,9 +121,10 @@ class _MqttScreenState extends State<MqttScreen> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        backgroundColor: const Color(0xFF1D61E7),
+                            borderRadius: BorderRadius.circular(10)),
+                        backgroundColor: _mqttService.isConnected
+                            ? Colors.red
+                            : const Color(0xFF1D61E7),
                       ),
                       onPressed: _isLoading
                           ? null
@@ -148,19 +136,16 @@ class _MqttScreenState extends State<MqttScreen> {
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
+                                  color: Colors.white, strokeWidth: 2),
                             )
                           : Text(
                               _mqttService.isConnected
                                   ? "Disconnect"
                                   : "Connect",
                               style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white),
                             ),
                     ),
                   ),
@@ -168,15 +153,14 @@ class _MqttScreenState extends State<MqttScreen> {
                   Center(
                     child: Text(
                       _mqttService.isConnected
-                          ? "Status: Connected"
-                          : "Status: Disconnected",
+                          ? "Status: Connected ✅"
+                          : "Status: Disconnected ❌",
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: _mqttService.isConnected
-                            ? Colors.green
-                            : Colors.red,
-                      ),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _mqttService.isConnected
+                              ? Colors.green
+                              : Colors.red),
                     ),
                   ),
                 ],
@@ -199,38 +183,29 @@ class _MqttScreenState extends State<MqttScreen> {
     );
   }
 
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String hintText,
-    FocusNode? focusNode,
-    TextInputType keyboardType = TextInputType.text,
-    bool isPassword = false,
-    String? Function(String?)? validator,
-    bool enabled = true,
-  }) {
+  Widget _buildInputField(
+      TextEditingController controller, String hintText, bool enabled,
+      {bool isPassword = false, bool isNumber = false}) {
     return TextFormField(
       controller: controller,
-      focusNode: focusNode,
       obscureText: isPassword,
-      keyboardType: keyboardType,
-      validator: validator,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       enabled: enabled,
-      cursorColor: Colors.black,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
-          color: Color(0xFF9CA3AF),
+        hintStyle: TextStyle(
+          color: enabled ? const Color(0xFF9CA3AF) : const Color(0xFFB0BEC5),
           fontSize: 14,
         ),
         filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
+        fillColor: enabled ? Colors.white : const Color(0xFFF5F5F5),
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
             color: Color(0xFFEDF1F3),
           ),
         ),
-        enabledBorder: OutlineInputBorder(
+        disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
             color: Color(0xFFEDF1F3),
@@ -238,8 +213,21 @@ class _MqttScreenState extends State<MqttScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: enabled ? const Color(0xFF1D61E7) : const Color(0xFFEDF1F3),
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
-            color: Color(0xFF1D61E7),
+            color: Colors.red,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(
+            color: Colors.red,
             width: 2,
           ),
         ),
@@ -248,9 +236,9 @@ class _MqttScreenState extends State<MqttScreen> {
           vertical: 14,
         ),
       ),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
-        color: Color(0xFF1A1C1E),
+        color: enabled ? const Color(0xFF1A1C1E) : const Color(0xFF78909C),
       ),
     );
   }
