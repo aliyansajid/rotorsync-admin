@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:rotorsync_admin/screens/home.dart';
+import 'package:rotorsync_admin/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -103,7 +103,7 @@ class LoginScreenState extends State<LoginScreen> {
                             "Log in to your account",
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.black54,
+                              color: Colors.grey,
                             ),
                           ),
                         ],
@@ -114,7 +114,7 @@ class LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: _emailController,
-                      hintText: "john@gmail.com",
+                      hintText: "john.doe@example.com",
                       focusNode: _emailFocusNode,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
