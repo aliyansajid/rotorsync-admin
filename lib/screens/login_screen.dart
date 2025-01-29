@@ -33,7 +33,7 @@ class LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+      print("Logging in with email: ${_emailController.text}"); // Debugging Log
 
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -41,6 +41,9 @@ class LoginScreenState extends State<LoginScreen> {
       );
 
       if (!mounted) return;
+
+      print("Login Successful"); // Debugging Log
+
       setState(() {
         _isLoading = false;
       });
@@ -51,6 +54,8 @@ class LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
+      print("Login Failed: ${e.code}"); // Debugging Log
+
       setState(() {
         _isLoading = false;
         switch (e.code) {
@@ -69,6 +74,13 @@ class LoginScreenState extends State<LoginScreen> {
           default:
             _errorMessage = "An error occurred. Please try again later.";
         }
+      });
+    } catch (e) {
+      print("Unknown error occurred: $e"); // Debugging Log
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "An unexpected error occurred. Please try again.";
       });
     }
   }
