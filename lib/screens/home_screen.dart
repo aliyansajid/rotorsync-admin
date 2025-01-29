@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rotorsync_admin/screens/settings_screen.dart';
 import 'users_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,8 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const UsersScreen(),
     const Center(child: Text('Sensors Screen', style: TextStyle(fontSize: 20))),
     const Center(child: Text('Topics Screen', style: TextStyle(fontSize: 20))),
-    const Center(
-        child: Text('Settings Screen', style: TextStyle(fontSize: 20))),
+    const SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
