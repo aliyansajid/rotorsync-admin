@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:rotorsync_admin/screens/home_screen.dart';
+import 'package:rotorsync_admin/widgets/label.dart';
+import 'package:rotorsync_admin/widgets/input_field.dart';
+import 'package:rotorsync_admin/widgets/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,14 +21,10 @@ class LoginScreenState extends State<LoginScreen> {
   final FocusNode _passwordFocusNode = FocusNode();
 
   bool _isLoading = false;
-  String? _errorMessage;
+  String? _emailError;
+  String? _passwordError;
 
   Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
     if (!_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = false;
@@ -32,9 +32,13 @@ class LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    try {
-      print("Logging in with email: ${_emailController.text}"); // Debugging Log
+    setState(() {
+      _isLoading = true;
+      _emailError = null;
+      _passwordError = null;
+    });
 
+    try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -42,45 +46,22 @@ class LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      print("Login Successful"); // Debugging Log
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Navigate to home screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
-      print("Login Failed: ${e.code}"); // Debugging Log
-
       setState(() {
         _isLoading = false;
-        switch (e.code) {
-          case 'user-not-found':
-            _errorMessage = "No user found with this email.";
-            break;
-          case 'wrong-password':
-            _errorMessage = "Incorrect password. Please try again.";
-            break;
-          case 'invalid-email':
-            _errorMessage = "The email address is not valid.";
-            break;
-          case 'user-disabled':
-            _errorMessage = "This account has been disabled.";
-            break;
-          default:
-            _errorMessage = "An error occurred. Please try again later.";
+        if (e.code == 'user-not-found' ||
+            e.code == 'wrong-password' ||
+            e.code == 'invalid-credential') {
+          _emailError = "Invalid email or password";
+          _passwordError = "Invalid email or password";
+        } else {
+          _emailError = null;
+          _passwordError = "An error occurred. Please try again.";
         }
-      });
-    } catch (e) {
-      print("Unknown error occurred: $e"); // Debugging Log
-
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "An unexpected error occurred. Please try again.";
       });
     }
   }
@@ -111,7 +92,7 @@ class LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Color(0xFF1A1C1E),
                             ),
                           ),
                           SizedBox(height: 10),
@@ -119,83 +100,76 @@ class LoginScreenState extends State<LoginScreen> {
                             "Log in to your account",
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey,
+                              color: Color(0xFF6C7278),
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 40),
-                    _buildLabel("Email"),
+                    const Label(text: "Email"),
                     const SizedBox(height: 8),
-                    _buildInputField(
+                    InputField(
                       controller: _emailController,
                       hintText: "john.doe@example.com",
                       focusNode: _emailFocusNode,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Email is required.";
+                          return "Email is required";
                         }
-                        return null;
+                        return _emailError;
                       },
                     ),
+                    if (_emailError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          _emailError!,
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
                     const SizedBox(height: 16),
-                    _buildLabel("Password"),
+                    const Label(text: "Password"),
                     const SizedBox(height: 8),
-                    _buildInputField(
+                    InputField(
                       controller: _passwordController,
                       hintText: "••••••••",
                       focusNode: _passwordFocusNode,
                       isPassword: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Password is required.";
+                          return "Password is required";
                         }
-                        return null;
+                        return _passwordError;
                       },
                     ),
-                    const SizedBox(height: 32),
-                    if (_errorMessage != null)
-                      Center(
+                    if (_passwordError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 14,
-                          ),
+                          _passwordError!,
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 12),
                         ),
                       ),
-                    if (_errorMessage != null) const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          backgroundColor: const Color(0xFF1D61E7),
-                        ),
-                        onPressed: _isLoading ? null : _login,
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                "Log In",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
+                    const SizedBox(height: 32),
+                    CustomButton(
+                      text: "Log In",
+                      icon: LucideIcons.logIn,
+                      isLoading: _isLoading,
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              await _login();
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            },
                     ),
                   ],
                 ),
@@ -203,84 +177,6 @@ class LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String labelText) {
-    return Text(
-      labelText,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: Color(0xFF6C7278),
-      ),
-    );
-  }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String hintText,
-    FocusNode? focusNode,
-    TextInputType keyboardType = TextInputType.text,
-    bool isPassword = false,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      obscureText: isPassword,
-      keyboardType: keyboardType,
-      validator: validator,
-      cursorColor: Colors.black,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: const TextStyle(
-          color: Color(0xFF9CA3AF),
-          fontSize: 14,
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color(0xFFEDF1F3),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color(0xFFEDF1F3),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color(0xFF1D61E7),
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Colors.red,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Colors.red,
-            width: 2,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-      ),
-      style: const TextStyle(
-        fontSize: 14,
-        color: Color(0xFF1A1C1E),
       ),
     );
   }
