@@ -154,7 +154,7 @@ class LoginScreenState extends State<LoginScreen> {
                               const TextStyle(color: Colors.red, fontSize: 12),
                         ),
                       ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
                     CustomButton(
                       text: "Log In",
                       icon: LucideIcons.logIn,

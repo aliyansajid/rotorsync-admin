@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:rotorsync_admin/screens/settings_screen.dart';
 import 'users_screen.dart';
 
@@ -16,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const Center(child: Text('Home Screen', style: TextStyle(fontSize: 20))),
     const UsersScreen(),
     const Center(child: Text('Sensors Screen', style: TextStyle(fontSize: 20))),
-    const Center(child: Text('Topics Screen', style: TextStyle(fontSize: 20))),
     const SettingsScreen(),
   ];
 
@@ -37,12 +37,13 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: const Color(0xFF1D61E7),
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
-          BottomNavigationBarItem(icon: Icon(Icons.sensors), label: 'Sensors'),
-          BottomNavigationBarItem(icon: Icon(Icons.topic), label: 'Topics'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Home'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: 'Settings'),
+              icon: Icon(LucideIcons.users), label: 'Users'),
+          BottomNavigationBarItem(
+              icon: Icon(LucideIcons.radio), label: 'Sensors'),
+          BottomNavigationBarItem(
+              icon: Icon(LucideIcons.settings), label: 'Settings'),
         ],
       ),
     );

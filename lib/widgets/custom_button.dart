@@ -5,6 +5,7 @@ class CustomButton extends StatelessWidget {
   final IconData icon;
   final bool isLoading;
   final VoidCallback? onPressed;
+  final bool isDestructive;
 
   const CustomButton({
     super.key,
@@ -12,6 +13,7 @@ class CustomButton extends StatelessWidget {
     required this.icon,
     required this.isLoading,
     required this.onPressed,
+    this.isDestructive = false,
   });
 
   @override
@@ -26,15 +28,17 @@ class CustomButton extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              backgroundColor:
-                  isLoading ? const Color(0xFFEDF1F3) : const Color(0xFF1D61E7),
+              backgroundColor: isLoading
+                  ? const Color(0xFFEDF1F3)
+                  : isDestructive
+                      ? Colors.red
+                      : const Color(0xFF1D61E7),
               minimumSize: const Size(double.infinity, 50),
             ),
             onPressed: isLoading
                 ? null
                 : () {
-                    print("CustomButton pressed!"); // Debugging print
-                    onPressed?.call(); // Safely call the function
+                    onPressed?.call();
                   },
             child: isLoading
                 ? const SizedBox(

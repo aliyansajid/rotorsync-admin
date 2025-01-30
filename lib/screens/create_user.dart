@@ -84,7 +84,10 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: Text(widget.userId != null ? "Edit User" : "Create User"),
+          title: Text(
+            widget.userId != null ? "Edit User" : "Create User",
+            style: const TextStyle(fontSize: 17),
+          ),
           backgroundColor: const Color(0xFF1D61E7),
           foregroundColor: Colors.white,
         ),

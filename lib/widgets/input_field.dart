@@ -8,6 +8,7 @@ class InputField extends StatefulWidget {
   final TextInputType keyboardType;
   final bool isPassword;
   final String? Function(String?)? validator;
+  final bool enabled;
 
   const InputField({
     super.key,
@@ -17,6 +18,7 @@ class InputField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.isPassword = false,
     this.validator,
+    this.enabled = true,
   });
 
   @override
@@ -41,6 +43,7 @@ class InputFieldState extends State<InputField> {
       keyboardType: widget.keyboardType,
       validator: widget.validator,
       cursorColor: Colors.black,
+      enabled: widget.enabled,
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: const TextStyle(
@@ -48,7 +51,7 @@ class InputFieldState extends State<InputField> {
           fontSize: 14,
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: widget.enabled ? Colors.white : const Color(0xFFEDF1F3),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
@@ -62,14 +65,22 @@ class InputFieldState extends State<InputField> {
                   color: const Color(0xFFACB5BB),
                   size: 20,
                 ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
+                onPressed: widget.enabled
+                    ? () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      }
+                    : null,
               )
             : null,
         enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(
+            color: Color(0xFFEDF1F3),
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
             color: Color(0xFFEDF1F3),
@@ -100,10 +111,11 @@ class InputFieldState extends State<InputField> {
           vertical: 14,
         ),
       ),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        color: Color(0xFF1A1C1E),
+        color:
+            widget.enabled ? const Color(0xFF1A1C1E) : const Color(0xFFACB5BB),
       ),
     );
   }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../services/mqtt_service.dart';
+import 'package:rotorsync_admin/widgets/label.dart';
+import 'package:rotorsync_admin/widgets/input_field.dart';
+import 'package:rotorsync_admin/widgets/custom_button.dart';
 
 class MqttScreen extends StatefulWidget {
   const MqttScreen({super.key});
@@ -77,7 +81,10 @@ class MqttScreenState extends State<MqttScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text("MQTT Configuration"),
+          title: const Text(
+            "MQTT Configuration",
+            style: TextStyle(fontSize: 17),
+          ),
           backgroundColor: const Color(0xFF1D61E7),
           foregroundColor: Colors.white,
         ),
@@ -94,60 +101,58 @@ class MqttScreenState extends State<MqttScreen> {
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
-                  _buildLabel("Broker URL"),
+                  const Label(text: "Broker URL"),
                   const SizedBox(height: 8),
-                  _buildInputField(
-                      brokerController, "broker.hivemq.com", !_fieldsDisabled),
+                  InputField(
+                    controller: brokerController,
+                    hintText: "broker.hivemq.com",
+                    focusNode: FocusNode(),
+                    keyboardType: TextInputType.text,
+                    enabled: !_fieldsDisabled,
+                  ),
                   const SizedBox(height: 16),
-                  _buildLabel("Port"),
+                  const Label(text: "Port"),
                   const SizedBox(height: 8),
-                  _buildInputField(portController, "1883", !_fieldsDisabled,
-                      isNumber: true),
+                  InputField(
+                    controller: portController,
+                    hintText: "1883",
+                    focusNode: FocusNode(),
+                    keyboardType: TextInputType.number,
+                    enabled: !_fieldsDisabled,
+                  ),
                   const SizedBox(height: 16),
-                  _buildLabel("Username"),
+                  const Label(text: "Username"),
                   const SizedBox(height: 8),
-                  _buildInputField(
-                      usernameController, "john", !_fieldsDisabled),
+                  InputField(
+                    controller: usernameController,
+                    hintText: "john",
+                    focusNode: FocusNode(),
+                    keyboardType: TextInputType.text,
+                    enabled: !_fieldsDisabled,
+                  ),
                   const SizedBox(height: 16),
-                  _buildLabel("Password"),
+                  const Label(text: "Password"),
                   const SizedBox(height: 8),
-                  _buildInputField(
-                      passwordController, "••••••••", !_fieldsDisabled,
-                      isPassword: true),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                        backgroundColor: _mqttService.isConnected
-                            ? Colors.red
-                            : const Color(0xFF1D61E7),
-                      ),
-                      onPressed: _isLoading
-                          ? null
-                          : _mqttService.isConnected
-                              ? disconnectMQTT
-                              : connectMQTT,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2),
-                            )
-                          : Text(
-                              _mqttService.isConnected
-                                  ? "Disconnect"
-                                  : "Connect",
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white),
-                            ),
-                    ),
+                  InputField(
+                    controller: passwordController,
+                    hintText: "••••••••",
+                    focusNode: FocusNode(),
+                    isPassword: true,
+                    enabled: !_fieldsDisabled,
+                  ),
+                  const SizedBox(height: 20),
+                  CustomButton(
+                    text: _mqttService.isConnected ? "Disconnect" : "Connect",
+                    icon: _mqttService.isConnected
+                        ? LucideIcons.powerOff
+                        : LucideIcons.power,
+                    isLoading: _isLoading,
+                    isDestructive: _mqttService.isConnected,
+                    onPressed: _isLoading
+                        ? null
+                        : _mqttService.isConnected
+                            ? disconnectMQTT
+                            : connectMQTT,
                   ),
                   const SizedBox(height: 20),
                   Center(
@@ -168,77 +173,6 @@ class MqttScreenState extends State<MqttScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String labelText) {
-    return Text(
-      labelText,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: Color(0xFF6C7278),
-      ),
-    );
-  }
-
-  Widget _buildInputField(
-      TextEditingController controller, String hintText, bool enabled,
-      {bool isPassword = false, bool isNumber = false}) {
-    return TextFormField(
-      controller: controller,
-      obscureText: isPassword,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      enabled: enabled,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(
-          color: enabled ? const Color(0xFF9CA3AF) : const Color(0xFFB0BEC5),
-          fontSize: 14,
-        ),
-        filled: true,
-        fillColor: enabled ? Colors.white : const Color(0xFFF5F5F5),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color(0xFFEDF1F3),
-          ),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color(0xFFEDF1F3),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: enabled ? const Color(0xFF1D61E7) : const Color(0xFFEDF1F3),
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Colors.red,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Colors.red,
-            width: 2,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-      ),
-      style: TextStyle(
-        fontSize: 14,
-        color: enabled ? const Color(0xFF1A1C1E) : const Color(0xFF78909C),
       ),
     );
   }
