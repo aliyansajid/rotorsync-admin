@@ -1,56 +1,82 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'create_user.dart';
+import 'package:rotorsync_admin/widgets/user_list_item.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
 
   @override
-  _UsersScreenState createState() => _UsersScreenState();
+  UsersScreenState createState() => UsersScreenState();
 }
 
-class _UsersScreenState extends State<UsersScreen> {
-  Set<String> selectedUsers = {}; // Store selected user IDs
+class UsersScreenState extends State<UsersScreen> {
+  final Set<String> _selectedUsers = {};
 
   void _toggleSelection(String userId) {
     setState(() {
-      final updatedSelection = Set<String>.from(selectedUsers);
-      if (updatedSelection.contains(userId)) {
-        updatedSelection.remove(userId);
+      if (_selectedUsers.contains(userId)) {
+        _selectedUsers.remove(userId);
       } else {
-        updatedSelection.add(userId);
+        _selectedUsers.add(userId);
       }
-      selectedUsers = updatedSelection; // Assign updated selection
     });
   }
 
-  Future<void> deleteUsers() async {
-    for (var userId in selectedUsers) {
-      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+  Future<void> _deleteUsers() async {
+    try {
+      for (var userId in _selectedUsers) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .delete();
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _selectedUsers.clear();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User(s) deleted successfully.")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete user(s): $e")),
+      );
     }
-    setState(() {
-      selectedUsers.clear();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("User deleted successfully.")),
-    );
   }
 
   void _editUser(String userId) async {
-    DocumentSnapshot userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
 
-    if (userDoc.exists) {
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+      if (!mounted) return;
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CreateUserScreen(
-            userId: userId,
-            initialData: userData,
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CreateUserScreen(
+              userId: userId,
+              initialData: userData,
+            ),
           ),
-        ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to edit user: $e")),
       );
     }
   }
@@ -58,29 +84,42 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: selectedUsers.isNotEmpty
+      appBar: _selectedUsers.isNotEmpty
           ? AppBar(
               backgroundColor: const Color(0xFF1D61E7),
-              title: Text("${selectedUsers.length} selected",
-                  style: const TextStyle(color: Colors.white)),
+              title: Text(
+                "${_selectedUsers.length} selected",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () {
                   setState(() {
-                    selectedUsers.clear();
+                    _selectedUsers.clear();
                   });
                 },
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.white),
-                  onPressed: deleteUsers,
+                  icon: const Icon(LucideIcons.trash2, color: Colors.white),
+                  onPressed: _deleteUsers,
                 ),
               ],
             )
           : AppBar(
               backgroundColor: const Color(0xFF1D61E7),
-              title: const Text("Users", style: TextStyle(color: Colors.white)),
+              title: const Text(
+                "Users",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('users').snapshots(),
@@ -99,70 +138,26 @@ class _UsersScreenState extends State<UsersScreen> {
             padding: const EdgeInsets.only(top: 8.0),
             itemCount: users.length,
             separatorBuilder: (context, index) => const Divider(
-                height: 1, thickness: 0.5, indent: 75, endIndent: 16),
+              height: 1,
+              thickness: 0.5,
+              indent: 75,
+              endIndent: 16,
+            ),
             itemBuilder: (context, index) {
               final user = users[index];
               final String userId = user.id;
               final String firstName = user['firstName'] ?? '';
               final String lastName = user['lastName'] ?? '';
-              final String fullName = "$firstName $lastName".trim();
-              final String initials =
-                  "${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}"
-                      .toUpperCase();
+              final String email = user['email'] ?? 'No Email';
 
-              return StatefulBuilder(
-                builder: (context, setStateItem) {
-                  final bool isSelected = selectedUsers.contains(userId);
-
-                  return GestureDetector(
-                    onLongPress: () => _toggleSelection(userId),
-                    onTap: selectedUsers.isNotEmpty
-                        ? () => _toggleSelection(userId)
-                        : null,
-                    child: Container(
-                      color: isSelected
-                          ? const Color(0xFF1D61E7).withOpacity(0.1)
-                          : Colors.transparent,
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 4.0),
-                        leading: CircleAvatar(
-                          backgroundColor: isSelected
-                              ? const Color(0xFF1D61E7)
-                              : const Color(0xFF1D61E7),
-                          radius: 28,
-                          child: isSelected
-                              ? const Icon(Icons.check, color: Colors.white)
-                              : Text(
-                                  initials.isNotEmpty ? initials : "?",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                        ),
-                        title: Text(
-                          fullName.isNotEmpty ? fullName : "Unnamed User",
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          user['email'] ?? "No Email",
-                          style:
-                              const TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        trailing: IconButton(
-                          icon:
-                              const Icon(Icons.edit, color: Color(0xFF1D61E7)),
-                          onPressed: () {
-                            _editUser(userId);
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              return UserListItem(
+                userId: userId,
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                isSelected: _selectedUsers.contains(userId),
+                onTap: () => _toggleSelection(userId),
+                onEdit: () => _editUser(userId),
               );
             },
           );

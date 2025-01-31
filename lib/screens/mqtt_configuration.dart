@@ -83,10 +83,14 @@ class MqttScreenState extends State<MqttScreen> {
         appBar: AppBar(
           title: const Text(
             "MQTT Configuration",
-            style: TextStyle(fontSize: 17),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           backgroundColor: const Color(0xFF1D61E7),
           foregroundColor: Colors.white,
+          centerTitle: true,
         ),
         body: SingleChildScrollView(
           child: Padding(

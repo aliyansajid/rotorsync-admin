@@ -7,10 +7,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
@@ -34,18 +34,50 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF1D61E7),
         unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(LucideIcons.users), label: 'Users'),
-          BottomNavigationBarItem(
-              icon: Icon(LucideIcons.radio), label: 'Sensors'),
-          BottomNavigationBarItem(
-              icon: Icon(LucideIcons.settings), label: 'Settings'),
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedLabelStyle: _labelTextStyle(isSelected: true),
+        unselectedLabelStyle: _labelTextStyle(isSelected: false),
+        items: [
+          _buildNavItem(LucideIcons.home, 'Home', 0),
+          _buildNavItem(LucideIcons.users, 'Users', 1),
+          _buildNavItem(LucideIcons.radio, 'Sensors', 2),
+          _buildNavItem(LucideIcons.settings, 'Settings', 3),
         ],
       ),
+    );
+  }
+
+  BottomNavigationBarItem _buildNavItem(
+      IconData icon, String label, int index) {
+    bool isSelected = _selectedIndex == index;
+
+    return BottomNavigationBarItem(
+      icon: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+        decoration: isSelected
+            ? BoxDecoration(
+                color: const Color(0xFF1D61E7).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              )
+            : null,
+        child: Icon(
+          icon,
+          color: isSelected ? const Color(0xFF1D61E7) : Colors.grey,
+        ),
+      ),
+      label: label,
+    );
+  }
+
+  TextStyle _labelTextStyle({required bool isSelected}) {
+    return TextStyle(
+      fontSize: 12,
+      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+      color: isSelected ? const Color(0xFF1D61E7) : Colors.grey,
     );
   }
 }

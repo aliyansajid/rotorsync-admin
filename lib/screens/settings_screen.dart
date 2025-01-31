@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:rotorsync_admin/screens/login_screen.dart';
 import 'package:rotorsync_admin/screens/mqtt_configuration.dart';
 import 'package:rotorsync_admin/screens/profile_screen.dart';
+import 'package:rotorsync_admin/widgets/profile_header.dart';
 import 'package:rotorsync_admin/widgets/settings_option.dart';
 import 'package:rotorsync_admin/widgets/custom_button.dart';
 
@@ -32,6 +33,9 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
+
+    if (!context.mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -42,15 +46,18 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           "Settings",
-          style: TextStyle(fontSize: 17),
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         backgroundColor: const Color(0xFF1D61E7),
         foregroundColor: Colors.white,
       ),
+      backgroundColor: Colors.white,
       body: FutureBuilder<Map<String, String>>(
         future: _getUserData(),
         builder: (context, snapshot) {
@@ -59,12 +66,12 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileHeader(snapshot),
+                ProfileHeader(snapshot: snapshot),
                 const SizedBox(height: 20),
                 const Text(
-                  "Settings",
+                  "General",
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1A1C1E),
                   ),
@@ -105,99 +112,6 @@ class SettingsScreen extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader(AsyncSnapshot<Map<String, String>> snapshot) {
-    if (!snapshot.hasData) {
-      return Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1D61E7),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSkeletonBox(width: 120, height: 18),
-                const SizedBox(height: 4),
-                _buildSkeletonBox(width: 180, height: 14),
-              ],
-            ),
-          ],
-        ),
-      );
-    } else {
-      String fullName =
-          "${snapshot.data!["firstName"]} ${snapshot.data!["lastName"]}".trim();
-      String email = snapshot.data!["email"]!;
-      String initials = (snapshot.data!["firstName"]!.isNotEmpty &&
-              snapshot.data!["lastName"]!.isNotEmpty)
-          ? "${snapshot.data!["firstName"]![0]}${snapshot.data!["lastName"]![0]}"
-          : "?";
-
-      return Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1D61E7),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.white,
-              child: Text(
-                initials.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1D61E7),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fullName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  email,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Widget _buildSkeletonBox({required double width, required double height}) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(4),
       ),
     );
   }

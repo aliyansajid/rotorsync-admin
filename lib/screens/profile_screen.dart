@@ -103,10 +103,14 @@ class ProfileScreenState extends State<ProfileScreen> {
         appBar: AppBar(
           title: const Text(
             "Profile",
-            style: TextStyle(fontSize: 17),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           backgroundColor: const Color(0xFF1D61E7),
           foregroundColor: Colors.white,
+          centerTitle: true,
         ),
         backgroundColor: Colors.white,
         body: SingleChildScrollView(
@@ -124,7 +128,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: 32,
-                          fontWeight: FontWeight.w500),
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
