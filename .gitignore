@@ -1,0 +1,35 @@
+# Ignore node_modules in all subdirectories
+**/node_modules/
+
+# Ignore environment variables
+.env
+.env.local
+
+# Ignore Firebase service account key (if stored locally)
+server/serviceAccountKey.json
+
+# Ignore build directories
+client/build/
+server/dist/
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore logs and debug files
+*.log
+*.tmp
+
+# Ignore package-lock.json (optional)
+package-lock.json
+
+# Ignore dependency directories (if any)
+client/.pnp
+.pnp.js
+
+# Ignore cache directories
+.cache/
