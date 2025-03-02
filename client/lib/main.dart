@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:rotorsync_admin/controllers/settings_controller.dart';
 import './constants/colors.dart';
 import './config/firebase_config.dart';
 import 'screens/login_screen.dart';
@@ -20,20 +22,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Admin',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        useMaterial3: true,
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: AppColors.primary,
-          selectionColor: AppColors.primary.withOpacity(0.5),
-          selectionHandleColor: AppColors.primary,
-        ),
-      ),
-      home: const AuthWrapper(),
-    );
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => SettingsController()),
+        ],
+        child: MaterialApp(
+          title: 'Admin',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+            useMaterial3: true,
+            textSelectionTheme: TextSelectionThemeData(
+              cursorColor: AppColors.primary,
+              selectionColor: AppColors.primary.withOpacity(0.5),
+              selectionHandleColor: AppColors.primary,
+            ),
+          ),
+          home: const AuthWrapper(),
+        ));
   }
 }
 

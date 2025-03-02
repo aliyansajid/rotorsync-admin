@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:rotorsync_admin/screens/settings_screen.dart';
 import 'package:rotorsync_admin/screens/users_screen.dart';
 import '../constants/colors.dart';
 
@@ -17,7 +18,7 @@ class HomeScreenState extends State<HomeScreen> {
     const _HomePage(),
     const UsersScreen(),
     const _PlaceholderScreen(title: 'Devices Screen'),
-    const _PlaceholderScreen(title: 'Settings Screen'),
+    const SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
