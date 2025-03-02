@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:rotorsync_admin/controllers/settings_controller.dart';
+import 'package:rotorsync_admin/services/mqtt_service.dart';
 import './constants/colors.dart';
 import './config/firebase_config.dart';
 import 'screens/login_screen.dart';
@@ -14,7 +15,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: kIsWeb ? FirebaseConfig.options : null);
   await dotenv.load(fileName: ".env");
+  await initializeServices();
   runApp(const MyApp());
+}
+
+Future<void> initializeServices() async {
+  MQTTService().initialize();
 }
 
 class MyApp extends StatelessWidget {

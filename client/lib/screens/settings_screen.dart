@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:rotorsync_admin/controllers/settings_controller.dart';
+import '../controllers/settings_controller.dart';
 import '../constants/colors.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/settings_option.dart';
 import '../widgets/custom_button.dart';
-import '../screens/profile_screen.dart';
+import 'profile_screen.dart';
+import 'mqtt_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -89,7 +90,6 @@ class SettingsScreen extends StatelessWidget {
                 ),
               );
             } else {
-              // Handle the case where uid is not available
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("User ID not found")),
               );
@@ -97,7 +97,12 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         const SizedBox(height: 8),
-        const SettingsOption(icon: LucideIcons.cloud, title: "MQTT"),
+        SettingsOption(
+          icon: LucideIcons.cloud,
+          title: "MQTT",
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const MqttScreen())),
+        ),
         const SizedBox(height: 8),
         const SettingsOption(
             icon: LucideIcons.messageCircle, title: "Message Test"),
