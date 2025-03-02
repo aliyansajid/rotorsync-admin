@@ -74,18 +74,31 @@ class HomeScreenState extends State<HomeScreen> {
     final bool isActive = _selectedIndex == index;
 
     return BottomNavigationBarItem(
-      icon: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-        decoration: isActive
-            ? BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(20),
-              )
-            : null,
-        child: Icon(
-          icon,
-          color: isActive ? AppColors.primary : AppColors.grey,
-        ),
+      icon: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        tween: Tween<double>(begin: 0, end: isActive ? 1 : 0),
+        builder: (context, value, child) {
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(value),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent.withOpacity(value * 0.5),
+                  blurRadius: 10 * value,
+                  spreadRadius: 2 * value,
+                ),
+              ],
+            ),
+            width: 48 + (value * 24),
+            child: Icon(
+              icon,
+              color: isActive ? AppColors.primary : AppColors.grey,
+            ),
+          );
+        },
       ),
       label: label,
     );
@@ -95,7 +108,7 @@ class HomeScreenState extends State<HomeScreen> {
     return TextStyle(
       fontSize: 12,
       fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-      color: isActive ? AppColors.primary : AppColors.grey,
+      color: isActive ? AppColors.primary : AppColors.text,
     );
   }
 }

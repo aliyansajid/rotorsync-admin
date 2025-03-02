@@ -1,10 +1,12 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _backendUrl = 'http://192.168.100.3:5000/api/users';
+  final String backendUrl =
+      dotenv.env['BACKEND_URL'] ?? 'http://localhost:5000';
 
   Stream<QuerySnapshot> getUsersStream() {
     return _firestore.collection('users').snapshots();
@@ -16,10 +18,12 @@ class UserService {
     return userDoc.exists ? userDoc.data() as Map<String, dynamic> : null;
   }
 
-  Future<void> deleteUsers(Set<String> userIds) async {
+  Future<http.Response> deleteUsers(Set<String> userIds) async {
+    final url = '$backendUrl/api/users/delete';
+
     try {
       final response = await http.delete(
-        Uri.parse('$_backendUrl/delete'),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'userIds': userIds.toList()}),
       );
@@ -27,6 +31,8 @@ class UserService {
       if (response.statusCode != 200) {
         throw Exception('Failed to delete users: ${response.body}');
       }
+
+      return response;
     } catch (e) {
       throw Exception('Failed to delete users: $e');
     }

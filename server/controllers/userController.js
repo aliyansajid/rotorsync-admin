@@ -2,11 +2,96 @@ const admin = require("../firebase-admin");
 
 const userController = {
   /**
+   * Create a new user in Firebase Authentication and Firestore.
+   * @param {Object} req - The request object.
+   * @param {Object} res - The response object.
+   */
+  createUser: async (req, res) => {
+    const { firstName, lastName, email, password, role } = req.body;
+
+    // Validate input
+    if (!firstName || !lastName || !email || !password || !role) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    try {
+      const auth = admin.auth();
+      const firestore = admin.firestore();
+
+      // Create user in Firebase Authentication
+      const userRecord = await auth.createUser({
+        email,
+        password,
+      });
+
+      // Save user data in Firestore
+      const userData = {
+        uid: userRecord.uid,
+        firstName,
+        lastName,
+        email,
+        role,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await firestore.collection("users").doc(userRecord.uid).set(userData);
+
+      res.status(201).json({ message: "User created successfully.", userData });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Failed to create user." });
+    }
+  },
+
+  /**
+   * Update an existing user in Firebase Authentication and Firestore.
+   * @param {Object} req - The request object.
+   * @param {Object} res - The response object.
+   */
+  updateUser: async (req, res) => {
+    const { userId } = req.params;
+    const { firstName, lastName, email, password, role } = req.body;
+
+    // Validate input
+    if (!userId || !firstName || !lastName || !email || !role) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    try {
+      const auth = admin.auth();
+      const firestore = admin.firestore();
+
+      // Update user in Firebase Authentication (if email or password is changed)
+      if (email) {
+        await auth.updateUser(userId, { email });
+      }
+      if (password) {
+        await auth.updateUser(userId, { password });
+      }
+
+      // Update user data in Firestore
+      const userData = {
+        firstName,
+        lastName,
+        email,
+        role,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await firestore.collection("users").doc(userId).update(userData);
+
+      res.status(200).json({ message: "User updated successfully.", userData });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user." });
+    }
+  },
+
+  /**
    * Delete users from Firestore and Firebase Authentication.
    * @param {Object} req - The request object.
    * @param {Object} res - The response object.
    */
-
   deleteUsers: async (req, res) => {
     const { userIds } = req.body;
 

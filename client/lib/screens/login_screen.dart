@@ -55,7 +55,7 @@ class _WelcomeMessage extends StatelessWidget {
           "Enter email and password to login",
           style: TextStyle(
             fontSize: 14,
-            color: AppColors.grey,
+            color: AppColors.text,
           ),
         ),
       ],

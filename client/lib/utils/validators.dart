@@ -1,4 +1,20 @@
 class Validators {
+  // First Name validation
+  static String? validateFirstName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'First name is required';
+    }
+    return null;
+  }
+
+  // Last Name validation
+  static String? validateLastName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Last name is required';
+    }
+    return null;
+  }
+
   // Email validation
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) return 'Email is required';

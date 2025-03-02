@@ -19,10 +19,8 @@ class UserListItem extends StatelessWidget {
     required this.email,
     required this.isSelected,
     required this.onTap,
-    this.onEdit = _defaultOnEdit,
+    required this.onEdit,
   });
-
-  static void _defaultOnEdit() {}
 
   @override
   Widget build(BuildContext context) {

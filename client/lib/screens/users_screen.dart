@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/colors.dart';
 import '../widgets/user_list_item.dart';
 import '../controllers/user_controller.dart';
+import 'user_form_screen.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -21,6 +22,7 @@ class UsersScreenState extends State<UsersScreen> {
       appBar: _buildAppBar(),
       backgroundColor: AppColors.white,
       body: _buildUserList(),
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
@@ -108,6 +110,22 @@ class UsersScreenState extends State<UsersScreen> {
                   isSelected: _controller.selectedUsers.contains(user.id),
                   onTap: () =>
                       setState(() => _controller.toggleSelection(user.id)),
+                  onEdit: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserFormScreen(
+                          userId: user.id,
+                          initialData: {
+                            'firstName': firstName,
+                            'lastName': lastName,
+                            'email': email,
+                            'role': user['role'] ?? 'Admin',
+                          },
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 if (index < users.length - 1)
                   const Padding(
@@ -123,6 +141,21 @@ class UsersScreenState extends State<UsersScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton(
+      backgroundColor: AppColors.primary,
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const UserFormScreen(),
+          ),
+        );
+      },
+      child: const Icon(LucideIcons.plus, color: AppColors.white),
     );
   }
 }
