@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:rotorsync_admin/screens/mqtt_message_screen.dart';
 import '../controllers/settings_controller.dart';
 import '../constants/colors.dart';
 import '../widgets/profile_header.dart';
@@ -104,8 +105,14 @@ class SettingsScreen extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const MqttScreen())),
         ),
         const SizedBox(height: 8),
-        const SettingsOption(
-            icon: LucideIcons.messageCircle, title: "Message Test"),
+        SettingsOption(
+          icon: LucideIcons.messageCircle,
+          title: "Message Test",
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const MqttMessageScreen())),
+        ),
       ],
     );
   }
