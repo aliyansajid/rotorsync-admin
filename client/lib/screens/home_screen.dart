@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:rotorsync_admin/screens/users_screen.dart';
 import '../constants/colors.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,15 +13,13 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // List of screens/pages (using Text widgets as placeholders)
   final List<Widget> _screens = [
     const _HomePage(),
-    const _PlaceholderScreen(title: 'Users Screen'),
+    const UsersScreen(),
     const _PlaceholderScreen(title: 'Devices Screen'),
     const _PlaceholderScreen(title: 'Settings Screen'),
   ];
 
-  // Handle item selection
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
@@ -33,7 +32,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Build the bottom navigation bar
   Widget _buildBottomNavigationBar() {
     return Theme(
       data: Theme.of(context).copyWith(
@@ -71,14 +69,13 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Build a navigation item
   BottomNavigationBarItem _buildNavItem(
       IconData icon, String label, int index) {
     final bool isActive = _selectedIndex == index;
 
     return BottomNavigationBarItem(
       icon: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
         decoration: isActive
             ? BoxDecoration(
                 color: AppColors.accent,
@@ -94,7 +91,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Label text style
   TextStyle _labelTextStyle({required bool isActive}) {
     return TextStyle(
       fontSize: 12,
@@ -104,7 +100,6 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Home page widget
 class _HomePage extends StatelessWidget {
   const _HomePage();
 
@@ -121,7 +116,6 @@ class _HomePage extends StatelessWidget {
   }
 }
 
-// Placeholder screen widget
 class _PlaceholderScreen extends StatelessWidget {
   final String title;
 

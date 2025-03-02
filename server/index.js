@@ -1,8 +1,14 @@
-const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json");
+const express = require("express");
+const userRoutes = require("./routes/userRoute");
+const admin = require("./firebase-admin");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(express.json());
+
+app.use("/api/users", userRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
-
-const db = admin.firestore();
