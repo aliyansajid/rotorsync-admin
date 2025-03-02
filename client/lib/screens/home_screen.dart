@@ -1,76 +1,140 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'login_screen.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import '../constants/colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? _user;
+class HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _getUser();
-  }
+  // List of screens/pages (using Text widgets as placeholders)
+  final List<Widget> _screens = [
+    const _HomePage(),
+    const _PlaceholderScreen(title: 'Users Screen'),
+    const _PlaceholderScreen(title: 'Devices Screen'),
+    const _PlaceholderScreen(title: 'Settings Screen'),
+  ];
 
-  // Fetch the current user
-  void _getUser() {
-    _user = _auth.currentUser;
-    setState(() {});
-  }
-
-  // Handle logout
-  Future<void> _logout() async {
-    await _auth.signOut();
-    if (!mounted) return;
-
-    // Navigate back to the LoginScreen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+  // Handle item selection
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  // Build the bottom navigation bar
+  Widget _buildBottomNavigationBar() {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_user != null && _user!.email != null)
-              Text(
-                'Logged in as: ${_user!.email}',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              )
-            else
-              const Text(
-                'No user logged in',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _logout,
-              child: const Text('Log Out'),
-            ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          border: Border(
+            top: BorderSide(color: AppColors.offWhite, width: 1.0),
+          ),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.white,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.grey,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedLabelStyle: _labelTextStyle(isActive: true),
+          unselectedLabelStyle: _labelTextStyle(isActive: false),
+          elevation: 0,
+          items: [
+            _buildNavItem(LucideIcons.home, 'Home', 0),
+            _buildNavItem(LucideIcons.users, 'Users', 1),
+            _buildNavItem(LucideIcons.monitorSmartphone, 'Devices', 2),
+            _buildNavItem(LucideIcons.settings, 'Settings', 3),
           ],
         ),
+      ),
+    );
+  }
+
+  // Build a navigation item
+  BottomNavigationBarItem _buildNavItem(
+      IconData icon, String label, int index) {
+    final bool isActive = _selectedIndex == index;
+
+    return BottomNavigationBarItem(
+      icon: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
+        decoration: isActive
+            ? BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(20),
+              )
+            : null,
+        child: Icon(
+          icon,
+          color: isActive ? AppColors.primary : AppColors.grey,
+        ),
+      ),
+      label: label,
+    );
+  }
+
+  // Label text style
+  TextStyle _labelTextStyle({required bool isActive}) {
+    return TextStyle(
+      fontSize: 12,
+      fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+      color: isActive ? AppColors.primary : AppColors.grey,
+    );
+  }
+}
+
+// Home page widget
+class _HomePage extends StatelessWidget {
+  const _HomePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.white,
+      alignment: Alignment.center,
+      child: const Text(
+        'Home Screen',
+        style: TextStyle(fontSize: 20),
+      ),
+    );
+  }
+}
+
+// Placeholder screen widget
+class _PlaceholderScreen extends StatelessWidget {
+  final String title;
+
+  const _PlaceholderScreen({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.white,
+      alignment: Alignment.center,
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 20),
       ),
     );
   }
