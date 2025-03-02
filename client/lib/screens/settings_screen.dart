@@ -6,6 +6,7 @@ import '../constants/colors.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/settings_option.dart';
 import '../widgets/custom_button.dart';
+import '../screens/profile_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -36,6 +37,16 @@ class SettingsScreen extends StatelessWidget {
     return StreamBuilder<Map<String, String>>(
       stream: settingsController.getUserData(),
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No user data found'));
+        }
+
+        final userData = snapshot.data;
+
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -43,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               ProfileHeader(snapshot: snapshot),
               const SizedBox(height: 20),
-              _buildSettingsOptions(),
+              _buildSettingsOptions(context, userData),
               const Spacer(),
               _buildLogoutButton(context, settingsController),
             ],
@@ -53,23 +64,43 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsOptions() {
-    return const Column(
+  Widget _buildSettingsOptions(
+      BuildContext context, Map<String, String>? userData) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           "General",
           style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: AppColors.secondary),
         ),
-        SizedBox(height: 8),
-        SettingsOption(icon: LucideIcons.user2, title: "Profile"),
-        SizedBox(height: 8),
-        SettingsOption(icon: LucideIcons.cloud, title: "MQTT"),
-        SizedBox(height: 8),
-        SettingsOption(icon: LucideIcons.messageCircle, title: "Message Test"),
+        const SizedBox(height: 8),
+        SettingsOption(
+          icon: LucideIcons.user2,
+          title: "Profile",
+          onTap: () {
+            if (userData != null && userData["uid"] != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileScreen(uid: userData["uid"]!),
+                ),
+              );
+            } else {
+              // Handle the case where uid is not available
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("User ID not found")),
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 8),
+        const SettingsOption(icon: LucideIcons.cloud, title: "MQTT"),
+        const SizedBox(height: 8),
+        const SettingsOption(
+            icon: LucideIcons.messageCircle, title: "Message Test"),
       ],
     );
   }

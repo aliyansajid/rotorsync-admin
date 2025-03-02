@@ -9,8 +9,12 @@ class SettingsController extends ChangeNotifier {
   Stream<Map<String, String>> getUserData() {
     final user = _auth.currentUser;
     if (user == null) {
-      return Stream.value(
-          {"email": "No Email", "firstName": "Unknown", "lastName": "User"});
+      return Stream.value({
+        "email": "No Email",
+        "firstName": "Unknown",
+        "lastName": "User",
+        "uid": "No UID",
+      });
     }
 
     return _firestore.collection('users').doc(user.uid).snapshots().map((doc) {
@@ -19,12 +23,14 @@ class SettingsController extends ChangeNotifier {
           "email": doc.data()?["email"] ?? user.email ?? "No Email",
           "firstName": doc.data()?["firstName"] ?? "Unknown",
           "lastName": doc.data()?["lastName"] ?? "User",
+          "uid": user.uid,
         };
       } else {
         return {
           "email": user.email ?? "No Email",
           "firstName": "Unknown",
           "lastName": "User",
+          "uid": user.uid,
         };
       }
     });

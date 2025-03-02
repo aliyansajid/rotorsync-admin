@@ -35,8 +35,12 @@ class Validators {
 
   // Password validation
   static String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Password is required';
-    if (value.length < 8) return 'Password must be at least 8 characters';
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
     return null;
   }
 }

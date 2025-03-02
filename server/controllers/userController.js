@@ -44,6 +44,35 @@ const userController = {
   },
 
   /**
+   * Fetch user data by UID.
+   * @param {Object} req - The request object.
+   * @param {Object} res - The response object.
+   */
+  getUser: async (req, res) => {
+    const { userId } = req.params;
+
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required." });
+    }
+
+    try {
+      const firestore = admin.firestore();
+      const userDoc = await firestore.collection("users").doc(userId).get();
+
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      const userData = userDoc.data();
+      res.status(200).json(userData);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      res.status(500).json({ error: "Failed to fetch user data." });
+    }
+  },
+
+  /**
    * Update an existing user in Firebase Authentication and Firestore.
    * @param {Object} req - The request object.
    * @param {Object} res - The response object.
@@ -53,7 +82,7 @@ const userController = {
     const { firstName, lastName, email, password, role } = req.body;
 
     // Validate input
-    if (!userId || !firstName || !lastName || !email || !role) {
+    if (!userId || !firstName || !lastName || !email) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -69,15 +98,20 @@ const userController = {
         await auth.updateUser(userId, { password });
       }
 
-      // Update user data in Firestore
+      // Prepare user data for Firestore update
       const userData = {
         firstName,
         lastName,
         email,
-        role,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
+      // Include role only if it is provided
+      if (role !== undefined) {
+        userData.role = role;
+      }
+
+      // Update user data in Firestore
       await firestore.collection("users").doc(userId).update(userData);
 
       res.status(200).json({ message: "User updated successfully.", userData });
