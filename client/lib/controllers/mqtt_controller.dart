@@ -10,6 +10,7 @@ class MqttController extends ChangeNotifier {
   final TextEditingController basePathController = TextEditingController();
   final TextEditingController topicController = TextEditingController();
   final TextEditingController messageController = TextEditingController();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>(); // Add formKey
 
   bool _isLoading = false;
   bool _fieldsDisabled = false;
@@ -107,11 +108,15 @@ class MqttController extends ChangeNotifier {
     try {
       _mqttService.setupClient(broker, port, _connectionType, basePath);
       await _mqttService.connect(username, password);
-      await _mqttService.saveCredentials(
-          broker, port, username, password, _connectionType, basePath);
-      connectionStatus = "Connected ✅";
+      if (_mqttService.isConnected) {
+        await _mqttService.saveCredentials(
+            broker, port, username, password, _connectionType, basePath);
+        connectionStatus = "Connected ✅";
+      } else {
+        connectionStatus = "Connection Failed ❌";
+      }
     } catch (e) {
-      connectionStatus = "Connection Failed ❌";
+      connectionStatus = "Connection Error ❌: $e";
     } finally {
       _isLoading = false;
       _fieldsDisabled = _mqttService.isConnected;

@@ -91,12 +91,14 @@ class MQTTService {
   }
 
   void setupClient(String broker, int port, String connectionType,
-      [String basePath = "/mqtt"]) {
+      [String basePath = "mqtt"]) {
     var uuid = const Uuid();
     String clientId = uuid.v4();
 
     if (connectionType == 'websocket') {
-      String websocketUrl = "wss://$broker:$port$basePath";
+      String formattedBasePath =
+          basePath.startsWith('/') ? basePath : '/$basePath';
+      String websocketUrl = "wss://$broker:$port$formattedBasePath";
       _client = MqttServerClient.withPort(websocketUrl, clientId, port);
       _client.useWebSocket = true;
       _client.websocketProtocols = ['mqtt'];

@@ -49,7 +49,7 @@ class UserFormScreenState extends State<UserFormScreen> {
               backgroundColor: AppColors.white,
               body: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Form(
                     key: controller.formKey,
                     child: Column(

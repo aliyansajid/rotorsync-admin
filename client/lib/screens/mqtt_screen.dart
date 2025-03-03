@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:rotorsync_admin/constants/colors.dart';
 import '../controllers/mqtt_controller.dart';
 import '../services/mqtt_service.dart';
 import '../widgets/label.dart';
 import '../widgets/input_field.dart';
 import '../widgets/custom_button.dart';
+import '../utils/validators.dart';
 
 class MqttScreen extends StatelessWidget {
   const MqttScreen({super.key});
@@ -15,20 +17,24 @@ class MqttScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => MqttController(mqttService: MQTTService()),
       child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: _buildAppBar(context), // Pass context here
-        body: const _MqttFormContent(),
+        backgroundColor: AppColors.white,
+        appBar: _buildAppBar(context),
+        body: GestureDetector(
+          onTap: () =>
+              FocusScope.of(context).unfocus(), // Hide keyboard on tap outside
+          child: const _MqttFormContent(),
+        ),
       ),
     );
   }
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFF1D61E7),
-      foregroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.white,
       leading: IconButton(
         icon: const Icon(LucideIcons.arrowLeft),
-        onPressed: () => Navigator.pop(context), // Use context here
+        onPressed: () => Navigator.pop(context),
       ),
       title: const Text(
         "MQTT Configuration",
@@ -46,8 +52,10 @@ class _MqttFormContent extends StatelessWidget {
     final controller = context.watch<MqttController>();
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
+          key: controller.formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -80,7 +88,7 @@ class _MqttFormContent extends StatelessWidget {
   Widget _buildDescription() {
     return const Text(
       "Please enter your MQTT broker details to establish a connection.",
-      style: TextStyle(fontSize: 14, color: Colors.grey),
+      style: TextStyle(fontSize: 14, color: AppColors.text),
     );
   }
 
@@ -116,6 +124,11 @@ class _MqttFormContent extends StatelessWidget {
           controller: controller.brokerController,
           hintText: "broker.hivemq.com",
           enabled: !controller.fieldsDisabled,
+          validator: Validators.validateBrokerUrl,
+          onChanged: (_) {
+            // Trigger validation on change
+            controller.formKey.currentState?.validate();
+          },
         ),
       ],
     );
@@ -132,6 +145,11 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "1883",
           keyboardType: TextInputType.number,
           enabled: !controller.fieldsDisabled,
+          validator: Validators.validatePort,
+          onChanged: (_) {
+            // Trigger validation on change
+            controller.formKey.currentState?.validate();
+          },
         ),
       ],
     );
@@ -145,16 +163,12 @@ class _MqttFormContent extends StatelessWidget {
         const SizedBox(height: 8),
         InputField(
           controller: controller.basePathController,
-          hintText: "Enter base path (e.g., mqtt)",
+          hintText: "mqtt",
           enabled: !controller.fieldsDisabled,
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty && !value.startsWith('/')) {
-              controller.basePathController.text = '/$value';
-              controller.basePathController.selection =
-                  TextSelection.fromPosition(
-                TextPosition(offset: controller.basePathController.text.length),
-              );
-            }
+          validator: Validators.validateBasePath,
+          onChanged: (_) {
+            // Trigger validation on change
+            controller.formKey.currentState?.validate();
           },
         ),
       ],
@@ -171,6 +185,11 @@ class _MqttFormContent extends StatelessWidget {
           controller: controller.usernameController,
           hintText: "john",
           enabled: !controller.fieldsDisabled,
+          validator: Validators.validateUsername,
+          onChanged: (_) {
+            // Trigger validation on change
+            controller.formKey.currentState?.validate();
+          },
         ),
       ],
     );
@@ -187,6 +206,11 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "••••••••",
           isPassword: true,
           enabled: !controller.fieldsDisabled,
+          validator: Validators.validatePassword,
+          onChanged: (_) {
+            // Trigger validation on change
+            controller.formKey.currentState?.validate();
+          },
         ),
       ],
     );
@@ -199,10 +223,16 @@ class _MqttFormContent extends StatelessWidget {
       isLoading: controller.isLoading,
       isDestructive: controller.isConnected,
       onPressed: controller.isLoading
-          ? null // Disable button when loading
-          : controller.isConnected
-              ? controller.disconnectMQTT
-              : controller.connectMQTT,
+          ? null
+          : () async {
+              if (!controller.isConnected) {
+                if (controller.formKey.currentState!.validate()) {
+                  await controller.connectMQTT();
+                }
+              } else {
+                controller.disconnectMQTT();
+              }
+            },
     );
   }
 
@@ -213,7 +243,7 @@ class _MqttFormContent extends StatelessWidget {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: controller.isConnected ? Colors.green : Colors.red,
+          color: controller.isConnected ? AppColors.green : AppColors.red,
         ),
       ),
     );

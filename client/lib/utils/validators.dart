@@ -43,4 +43,44 @@ class Validators {
     }
     return null;
   }
+
+  // Broker URL validation
+  static String? validateBrokerUrl(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Broker URL is required';
+    }
+
+    return null;
+  }
+
+  // Port validation
+  static String? validatePort(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Port is required';
+    }
+    final port = int.tryParse(value);
+    if (port == null || port < 4 || port > 65535) {
+      return 'Invalid port number';
+    }
+    return null;
+  }
+
+  // Base Path validation
+  static String? validateBasePath(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Base path is required';
+    }
+    if (value.contains(' ')) {
+      return 'Base path cannot contain spaces';
+    }
+    return null;
+  }
+
+  // Username validation
+  static String? validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Username is required';
+    }
+    return null;
+  }
 }
