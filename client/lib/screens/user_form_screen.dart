@@ -150,7 +150,14 @@ class UserFormScreenState extends State<UserFormScreen> {
                   ? "••••••••"
                   : "Enter new password (optional)",
               isPassword: true,
-              validator: Validators.validatePassword,
+              validator: (value) {
+                if (widget.userId == null) {
+                  return Validators.validatePassword(value);
+                } else if (value!.isNotEmpty) {
+                  return Validators.validatePassword(value);
+                }
+                return null;
+              },
             );
           },
         ),

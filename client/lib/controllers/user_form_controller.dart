@@ -4,9 +4,6 @@ import 'package:rotorsync_admin/widgets/custom_snackbar.dart';
 import 'package:rotorsync_admin/services/user_service.dart';
 
 class UserFormController extends ChangeNotifier {
-  static const String userCreatedMessage = "User created successfully.";
-  static const String userUpdatedMessage = "User updated successfully.";
-
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -41,32 +38,35 @@ class UserFormController extends ChangeNotifier {
         'fullName': fullNameController.text.trim(),
         'email': emailController.text.trim(),
         'role': role,
-        if (passwordController.text.isNotEmpty)
-          'password': passwordController.text.trim(),
       };
+
+      if (userId == null || passwordController.text.isNotEmpty) {
+        userData['password'] = passwordController.text.trim();
+      }
 
       final response = userId == null
           ? await UserService().createUser(userData)
           : await UserService().updateUser(userId!, userData);
+
+      final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (context.mounted) {
           Navigator.pop(context);
           customSnackbar(
             context,
-            userId == null ? userCreatedMessage : userUpdatedMessage,
+            responseBody['message'] ?? 'Operation completed successfully.',
           );
         }
       } else {
-        final errorMessage =
-            jsonDecode(response.body)['message'] ?? 'Unknown error';
-        throw Exception(errorMessage);
+        final errorMessage = responseBody['error'] ?? 'Unknown error occurred.';
+        throw errorMessage;
       }
     } catch (e) {
       if (context.mounted) {
         customSnackbar(
           context,
-          "Error: ${e.toString()}",
+          "Error: $e",
           isError: true,
         );
       }

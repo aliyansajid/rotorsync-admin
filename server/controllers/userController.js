@@ -9,11 +9,6 @@ const userController = {
   createUser: async (req, res) => {
     const { fullName, email, password, role } = req.body;
 
-    // Validate input
-    if (!fullName || !email || !password || !role) {
-      return res.status(400).json({ error: "All fields are required." });
-    }
-
     try {
       const auth = admin.auth();
       const firestore = admin.firestore();
@@ -35,10 +30,23 @@ const userController = {
 
       await firestore.collection("users").doc(userRecord.uid).set(userData);
 
-      res.status(201).json({ message: "User created successfully.", userData });
+      // Success response
+      res.status(201).json({ message: "User created successfully." });
     } catch (error) {
       console.error("Error creating user:", error);
-      res.status(500).json({ error: "Failed to create user." });
+
+      let errorMessage = "Failed to create user.";
+      if (error.code === "auth/email-already-exists") {
+        errorMessage =
+          "The email address is already in use by another account.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "The email address is invalid.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "The password is too weak.";
+      }
+
+      // Error response
+      res.status(500).json({ error: errorMessage });
     }
   },
 
@@ -78,29 +86,29 @@ const userController = {
    */
   updateUser: async (req, res) => {
     const { userId } = req.params;
-    const { firstName, lastName, email, password, role } = req.body;
-
-    // Validate input
-    if (!userId || !firstName || !lastName || !email) {
-      return res.status(400).json({ error: "All fields are required." });
-    }
+    const { fullName, email, password, role } = req.body;
 
     try {
       const auth = admin.auth();
       const firestore = admin.firestore();
 
-      // Update user in Firebase Authentication (if email or password is changed)
+      // Prepare user data for Firebase Authentication update
+      const authUpdates = {};
       if (email) {
-        await auth.updateUser(userId, { email });
+        authUpdates.email = email;
       }
       if (password) {
-        await auth.updateUser(userId, { password });
+        authUpdates.password = password;
+      }
+
+      // Update user in Firebase Authentication (if email or password is changed)
+      if (Object.keys(authUpdates).length > 0) {
+        await auth.updateUser(userId, authUpdates);
       }
 
       // Prepare user data for Firestore update
       const userData = {
-        firstName,
-        lastName,
+        fullName,
         email,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
@@ -113,10 +121,23 @@ const userController = {
       // Update user data in Firestore
       await firestore.collection("users").doc(userId).update(userData);
 
-      res.status(200).json({ message: "User updated successfully.", userData });
+      // Success response
+      res.status(200).json({ message: "User updated successfully." });
     } catch (error) {
       console.error("Error updating user:", error);
-      res.status(500).json({ error: "Failed to update user." });
+
+      let errorMessage = "Failed to update user.";
+      if (error.code === "auth/email-already-exists") {
+        errorMessage =
+          "The email address is already in use by another account.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "The email address is invalid.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "The password is too weak.";
+      }
+
+      // Error response
+      res.status(500).json({ error: errorMessage });
     }
   },
 
@@ -127,7 +148,6 @@ const userController = {
    */
   deleteUsers: async (req, res) => {
     const { userIds } = req.body;
-    console.log(userIds);
 
     // Validate input
     if (!userIds || !Array.isArray(userIds)) {
@@ -148,10 +168,22 @@ const userController = {
       // Delete users from Firebase Authentication
       await Promise.all(userIds.map((userId) => auth.deleteUser(userId)));
 
-      res.status(200).json({ message: "Users deleted successfully." });
+      // Success response
+      const message =
+        userIds.length === 1
+          ? "User deleted successfully."
+          : `${userIds.length} users deleted successfully.`;
+      res.status(200).json({ message });
     } catch (error) {
       console.error("Error deleting users:", error);
-      res.status(500).json({ error: "Failed to delete users." });
+
+      // Error response
+      let errorMessage = "Failed to delete users.";
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "One or more users not found.";
+      }
+
+      res.status(500).json({ error: errorMessage });
     }
   },
 };

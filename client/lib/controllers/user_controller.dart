@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rotorsync_admin/widgets/custom_snackbar.dart';
@@ -21,20 +22,26 @@ class UsersController {
     if (!context.mounted) return;
 
     try {
-      int deletedCount = _selectedUsers.length;
-      await _userService.deleteUsers(_selectedUsers);
+      final response = await _userService.deleteUsers(_selectedUsers);
 
-      _selectedUsers.clear();
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final message =
+            responseBody['message'] ?? 'Users deleted successfully.';
 
-      if (context.mounted) {
-        String message = deletedCount == 1
-            ? "User deleted successfully."
-            : "$deletedCount users deleted successfully.";
-        customSnackbar(context, message);
+        _selectedUsers.clear();
+
+        if (context.mounted) {
+          customSnackbar(context, message);
+        }
+      } else {
+        final responseBody = jsonDecode(response.body);
+        final errorMessage = responseBody['error'] ?? 'Failed to delete users.';
+        throw errorMessage;
       }
     } catch (e) {
       if (context.mounted) {
-        customSnackbar(context, "Failed to delete user(s): $e", isError: true);
+        customSnackbar(context, "Error: $e", isError: true);
       }
     }
   }
