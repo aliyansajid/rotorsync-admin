@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rotorsync_admin/utils/validators.dart';
 import '../services/mqtt_service.dart';
 
 class MqttController extends ChangeNotifier {
@@ -10,7 +11,13 @@ class MqttController extends ChangeNotifier {
   final TextEditingController basePathController = TextEditingController();
   final TextEditingController topicController = TextEditingController();
   final TextEditingController messageController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>(); // Add formKey
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  String? brokerError;
+  String? portError;
+  String? basePathError;
+  String? usernameError;
+  String? passwordError;
 
   bool _isLoading = false;
   bool _fieldsDisabled = false;
@@ -22,6 +29,7 @@ class MqttController extends ChangeNotifier {
   final ValueNotifier<String> messageNotifier =
       ValueNotifier("No messages received");
 
+  // Corrected: Only one unnamed constructor
   MqttController({required MQTTService mqttService})
       : _mqttService = mqttService {
     _mqttService.onConnectionStatusChange = (status) {
@@ -47,6 +55,31 @@ class MqttController extends ChangeNotifier {
 
   set connectionType(String type) {
     _connectionType = type;
+    notifyListeners();
+  }
+
+  void validateBroker() {
+    brokerError = Validators.validateBrokerUrl(brokerController.text);
+    notifyListeners();
+  }
+
+  void validatePort() {
+    portError = Validators.validatePort(portController.text);
+    notifyListeners();
+  }
+
+  void validateBasePath() {
+    basePathError = Validators.validateBasePath(basePathController.text);
+    notifyListeners();
+  }
+
+  void validateUsername() {
+    usernameError = Validators.validateUsername(usernameController.text);
+    notifyListeners();
+  }
+
+  void validatePassword() {
+    passwordError = Validators.validatePassword(passwordController.text);
     notifyListeners();
   }
 

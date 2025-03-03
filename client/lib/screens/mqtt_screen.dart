@@ -55,7 +55,6 @@ class _MqttFormContent extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: controller.formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -125,10 +124,7 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "broker.hivemq.com",
           enabled: !controller.fieldsDisabled,
           validator: Validators.validateBrokerUrl,
-          onChanged: (_) {
-            // Trigger validation on change
-            controller.formKey.currentState?.validate();
-          },
+          errorText: controller.brokerError,
         ),
       ],
     );
@@ -146,9 +142,9 @@ class _MqttFormContent extends StatelessWidget {
           keyboardType: TextInputType.number,
           enabled: !controller.fieldsDisabled,
           validator: Validators.validatePort,
-          onChanged: (_) {
-            // Trigger validation on change
-            controller.formKey.currentState?.validate();
+          errorText: controller.portError,
+          onChanged: (value) {
+            controller.validatePort();
           },
         ),
       ],
@@ -166,9 +162,9 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "mqtt",
           enabled: !controller.fieldsDisabled,
           validator: Validators.validateBasePath,
-          onChanged: (_) {
-            // Trigger validation on change
-            controller.formKey.currentState?.validate();
+          errorText: controller.basePathError,
+          onChanged: (value) {
+            controller.validateBasePath();
           },
         ),
       ],
@@ -186,9 +182,9 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "john",
           enabled: !controller.fieldsDisabled,
           validator: Validators.validateUsername,
-          onChanged: (_) {
-            // Trigger validation on change
-            controller.formKey.currentState?.validate();
+          errorText: controller.usernameError,
+          onChanged: (value) {
+            controller.validateUsername();
           },
         ),
       ],
@@ -207,9 +203,9 @@ class _MqttFormContent extends StatelessWidget {
           isPassword: true,
           enabled: !controller.fieldsDisabled,
           validator: Validators.validatePassword,
-          onChanged: (_) {
-            // Trigger validation on change
-            controller.formKey.currentState?.validate();
+          errorText: controller.passwordError,
+          onChanged: (value) {
+            controller.validatePassword();
           },
         ),
       ],

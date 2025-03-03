@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rotorsync_admin/widgets/custom_snackbar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/validators.dart';
@@ -14,19 +12,17 @@ class UserFormController extends ChangeNotifier {
       dotenv.env['BACKEND_URL'] ?? 'http://localhost:5000';
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  String role = 'Admin';
+  bool isLoading = false;
 
   String? firstNameError;
   String? lastNameError;
   String? emailError;
   String? passwordError;
-
-  String role = 'Admin';
-  bool isLoading = false;
 
   final String? userId;
   final Map<String, dynamic>? initialData;
@@ -38,7 +34,6 @@ class UserFormController extends ChangeNotifier {
       emailController.text = initialData!['email'] ?? '';
       role = initialData!['role'] ?? 'Admin';
     }
-
     firstNameController.addListener(() => validateFirstName());
     lastNameController.addListener(() => validateLastName());
     emailController.addListener(() => validateEmail());
@@ -79,6 +74,9 @@ class UserFormController extends ChangeNotifier {
         (userId == null && passwordError != null)) {
       return;
     }
+    if (isLoading) return;
+
+    if (!formKey.currentState!.validate()) return;
 
     isLoading = true;
     notifyListeners();
@@ -93,20 +91,29 @@ class UserFormController extends ChangeNotifier {
           'password': passwordController.text.trim(),
       };
 
-      if (userId == null) {
-        await _createUserInFirebase(userData);
-      } else {
-        await _sendUpdateUserRequest(userData);
-      }
+      final response = userId == null
+          ? await _sendCreateUserRequest(userData)
+          : await _sendUpdateUserRequest(userData);
 
-      if (context.mounted) {
-        Navigator.pop(context);
-        customSnackbar(
-            context, userId == null ? userCreatedMessage : userUpdatedMessage);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (context.mounted) {
+          Navigator.pop(context);
+          customSnackbar(
+            context,
+            userId == null ? userCreatedMessage : userUpdatedMessage,
+          );
+        }
+      } else {
+        throw Exception(
+            'Failed to ${userId == null ? 'create' : 'update'} user');
       }
     } catch (e) {
       if (context.mounted) {
-        customSnackbar(context, "Error: ${e.toString()}", isError: true);
+        customSnackbar(
+          context,
+          "Error: ${e.toString()}",
+          isError: true,
+        );
       }
     } finally {
       isLoading = false;
@@ -114,27 +121,14 @@ class UserFormController extends ChangeNotifier {
     }
   }
 
-  Future<void> _createUserInFirebase(Map<String, dynamic> userData) async {
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: userData['email'],
-        password: userData['password'],
-      );
-
-      String uid = userCredential.user!.uid;
-
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'uid': uid,
-        'firstName': userData['firstName'],
-        'lastName': userData['lastName'],
-        'email': userData['email'],
-        'role': userData['role'],
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw Exception("Firebase user creation failed: $e");
-    }
+  Future<http.Response> _sendCreateUserRequest(
+      Map<String, dynamic> userData) async {
+    final url = '$backendUrl/api/users/create';
+    return await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(userData),
+    );
   }
 
   Future<http.Response> _sendUpdateUserRequest(
