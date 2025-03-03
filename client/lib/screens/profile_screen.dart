@@ -1,124 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:rotorsync_admin/utils/validators.dart';
+import 'package:provider/provider.dart';
 import '../constants/colors.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/input_field.dart';
 import '../widgets/label.dart';
+import '../utils/validators.dart';
 
-class ProfileScreen extends StatefulWidget {
-  final String uid; // Add uid as a parameter
+class ProfileScreen extends StatelessWidget {
+  final String uid;
   const ProfileScreen({super.key, required this.uid});
 
   @override
-  ProfileScreenState createState() => ProfileScreenState();
-}
-
-class ProfileScreenState extends State<ProfileScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  late final ProfileController _profileController;
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  bool isLoading = true;
-  bool _isUpdating = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _profileController = ProfileController(uid: widget.uid);
-    _fetchUserData();
-  }
-
-  @override
-  void dispose() {
-    _profileController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _fetchUserData() async {
-    try {
-      final userData = await _profileController.fetchUserData();
-      if (mounted) {
-        setState(() {
-          emailController.text = userData["email"] ?? "";
-          firstNameController.text = userData["firstName"] ?? "";
-          lastNameController.text = userData["lastName"] ?? "";
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error fetching user data: $e")),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isUpdating = true;
-    });
-
-    try {
-      await _profileController.updateProfile(
-        firstName: firstNameController.text,
-        lastName: lastNameController.text,
-        email: emailController.text,
-        password: passwordController.text,
-        context: context,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error updating profile: $e")),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUpdating = false;
-        });
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "Profile",
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
-          ),
-          leading: IconButton(
-            icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () => Navigator.pop(context),
-          ),
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-        ),
-        backgroundColor: AppColors.white,
-        body: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              )
-            : SingleChildScrollView(
+    return ChangeNotifierProvider(
+      create: (_) => ProfileController(uid: uid),
+      child: Consumer<ProfileController>(
+        builder: (context, controller, _) {
+          return GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: Scaffold(
+              appBar: _buildAppBar(context),
+              backgroundColor: AppColors.white,
+              body: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Form(
-                    key: _formKey,
+                    key: controller.formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -127,10 +36,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             radius: 48,
                             backgroundColor: AppColors.primary,
                             child: Text(
-                              (firstNameController.text.isNotEmpty ||
-                                      lastNameController.text.isNotEmpty)
-                                  ? "${firstNameController.text.isNotEmpty ? firstNameController.text[0].toUpperCase() : ''}${lastNameController.text.isNotEmpty ? lastNameController.text[0].toUpperCase() : ''}"
-                                  : "NA",
+                              _getInitials(controller.fullNameController.text),
                               style: const TextStyle(
                                 color: AppColors.white,
                                 fontSize: 32,
@@ -140,46 +46,130 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 40),
-                        const Label(text: "First Name"),
-                        const SizedBox(height: 8),
-                        InputField(
-                            controller: firstNameController, hintText: "John"),
+                        _buildFullNameField(controller),
                         const SizedBox(height: 16),
-                        const Label(text: "Last Name"),
-                        const SizedBox(height: 8),
-                        InputField(
-                            controller: lastNameController, hintText: "Doe"),
+                        _buildEmailField(controller),
                         const SizedBox(height: 16),
-                        const Label(text: "Email"),
-                        const SizedBox(height: 8),
-                        InputField(
-                          controller: emailController,
-                          hintText: "john.doe@example.com",
-                          keyboardType: TextInputType.emailAddress,
-                          validator: Validators.validateEmail,
-                        ),
-                        const SizedBox(height: 16),
-                        const Label(text: "Password"),
-                        const SizedBox(height: 8),
-                        InputField(
-                          controller: passwordController,
-                          hintText: "••••••••",
-                          isPassword: true,
-                          validator: Validators.validatePassword,
-                        ),
+                        _buildPasswordField(controller),
                         const SizedBox(height: 32),
-                        CustomButton(
-                          text: "Update",
-                          icon: LucideIcons.refreshCcw,
-                          isLoading: _isUpdating,
-                          onPressed: _isUpdating ? null : _updateProfile,
-                        ),
+                        _buildSubmitButton(context, controller),
                       ],
                     ),
                   ),
                 ),
               ),
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  String _getInitials(String fullName) {
+    if (fullName.isEmpty) return "NA";
+
+    final parts = fullName.trim().split(' ');
+    final firstNameInitial = parts[0][0].toUpperCase();
+    final lastNameInitial =
+        parts.length > 1 ? parts[parts.length - 1][0].toUpperCase() : '';
+
+    return '$firstNameInitial$lastNameInitial';
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.white,
+      title: const Text(
+        "Profile",
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
+      ),
+      leading: IconButton(
+        icon: const Icon(LucideIcons.arrowLeft),
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildFullNameField(ProfileController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Label(text: "Full Name"),
+        const SizedBox(height: 8),
+        Selector<ProfileController, TextEditingController>(
+          selector: (_, controller) => controller.fullNameController,
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller,
+              hintText: "John Doe",
+              validator: Validators.validateFullName,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField(ProfileController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Label(text: "Email"),
+        const SizedBox(height: 8),
+        Selector<ProfileController, TextEditingController>(
+          selector: (_, controller) => controller.emailController,
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller,
+              hintText: "john.doe@example.com",
+              keyboardType: TextInputType.emailAddress,
+              validator: Validators.validateEmail,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField(ProfileController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Label(text: "Password"),
+        const SizedBox(height: 8),
+        Selector<ProfileController, TextEditingController>(
+          selector: (_, controller) => controller.passwordController,
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller,
+              hintText: "••••••••",
+              isPassword: true,
+              validator: (value) {
+                if (value != null && value.isNotEmpty) {
+                  return Validators.validatePassword(value);
+                }
+                return null;
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(
+      BuildContext context, ProfileController controller) {
+    return Selector<ProfileController, bool>(
+      selector: (_, controller) => controller.isLoading,
+      builder: (context, isLoading, _) {
+        return CustomButton(
+          text: "Update",
+          icon: LucideIcons.refreshCcw,
+          isLoading: isLoading,
+          onPressed: isLoading ? null : () => controller.submitForm(context),
+        );
+      },
     );
   }
 }

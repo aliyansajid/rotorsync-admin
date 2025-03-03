@@ -1,72 +1,86 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/material.dart';
 import 'package:rotorsync_admin/widgets/custom_snackbar.dart';
+import '../services/profile_service.dart';
 
 class ProfileController extends ChangeNotifier {
-  static const String profileUpdatedMessage = "Profile updated successfully.";
-  final String backendUrl =
-      dotenv.env['BACKEND_URL'] ?? 'http://localhost:5000';
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  bool isLoading = false;
 
   final String uid;
+  final ProfileService _profileService = ProfileService();
 
-  ProfileController({required this.uid});
+  ProfileController({required this.uid}) {
+    fetchUserData();
+  }
 
-  Future<Map<String, dynamic>> fetchUserData() async {
+  Future<void> fetchUserData() async {
+    isLoading = true;
+    notifyListeners();
+
     try {
-      final response = await http.get(
-        Uri.parse('$backendUrl/api/users/$uid'),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception("Failed to fetch user data: ${response.statusCode}");
-      }
+      final userData = await _profileService.fetchUserData(uid);
+      fullNameController.text = userData['fullName'] ?? '';
+      emailController.text = userData['email'] ?? '';
     } catch (e) {
       throw Exception("Error fetching user data: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 
-  Future<void> updateProfile({
-    required String firstName,
-    required String lastName,
-    required String email,
-    String? password,
-    required BuildContext context,
-  }) async {
+  Future<void> submitForm(BuildContext context) async {
+    if (isLoading || !formKey.currentState!.validate()) return;
+
+    isLoading = true;
+    notifyListeners();
+
     try {
       final Map<String, dynamic> userData = {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        if (password != null && password.isNotEmpty) 'password': password,
+        'fullName': fullNameController.text.trim(),
+        'email': emailController.text.trim(),
+        if (passwordController.text.isNotEmpty)
+          'password': passwordController.text.trim(),
       };
 
-      final response = await http.put(
-        Uri.parse('$backendUrl/api/users/update/$uid'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(userData),
-      );
+      final response = await _profileService.updateUser(uid, userData);
+      final responseBody = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (context.mounted) {
-          customSnackbar(context, profileUpdatedMessage);
+          customSnackbar(
+            context,
+            responseBody['message'] ?? 'Profile updated successfully.',
+          );
         }
       } else {
-        throw Exception('Failed to update profile: ${response.statusCode}');
+        final errorMessage = responseBody['error'] ?? 'Unknown error occurred.';
+        throw errorMessage;
       }
     } catch (e) {
       if (context.mounted) {
         customSnackbar(
           context,
-          "Error: ${e.toString()}",
+          "Error: $e",
           isError: true,
         );
       }
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    fullNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 }
