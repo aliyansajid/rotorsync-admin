@@ -102,10 +102,15 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "First Name"),
         const SizedBox(height: 8),
-        InputField(
-          controller: _controller.firstNameController,
-          hintText: "John",
-          validator: Validators.validateFirstName,
+        Consumer<UserFormController>(
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller.firstNameController,
+              hintText: "John",
+              validator: Validators.validateFirstName,
+              errorText: controller.firstNameError,
+            );
+          },
         ),
       ],
     );
@@ -117,10 +122,16 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "Last Name"),
         const SizedBox(height: 8),
-        InputField(
-          controller: _controller.lastNameController,
-          hintText: "Doe",
-          validator: Validators.validateLastName,
+        Consumer<UserFormController>(
+          builder: (context, controller, _) {
+            return InputField(
+              controller:
+                  controller.lastNameController, // ✅ Corrected controller
+              hintText: "Doe",
+              validator: Validators.validateLastName,
+              errorText: controller.lastNameError,
+            );
+          },
         ),
       ],
     );
@@ -132,11 +143,16 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "Email"),
         const SizedBox(height: 8),
-        InputField(
-          controller: _controller.emailController,
-          hintText: "john.doe@example.com",
-          keyboardType: TextInputType.emailAddress,
-          validator: Validators.validateEmail,
+        Consumer<UserFormController>(
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller.emailController,
+              hintText: "john.doe@example.com",
+              keyboardType: TextInputType.emailAddress,
+              validator: Validators.validateEmail,
+              errorText: controller.emailError,
+            );
+          },
         ),
       ],
     );
@@ -148,13 +164,18 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "Password"),
         const SizedBox(height: 8),
-        InputField(
-          controller: _controller.passwordController,
-          hintText: widget.userId == null
-              ? "••••••••"
-              : "Enter new password (optional)",
-          isPassword: true,
-          validator: Validators.validatePassword,
+        Consumer<UserFormController>(
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller.passwordController,
+              hintText: widget.userId == null
+                  ? "••••••••"
+                  : "Enter new password (optional)",
+              isPassword: true,
+              validator: Validators.validatePassword,
+              errorText: controller.passwordError,
+            );
+          },
         ),
       ],
     );

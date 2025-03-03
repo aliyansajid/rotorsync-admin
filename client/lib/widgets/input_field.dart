@@ -12,6 +12,8 @@ class InputField extends StatefulWidget {
   final bool enabled;
   final List<String>? items;
   final String? value;
+  final String? errorText;
+
   final void Function(String?)? onChanged;
 
   const InputField({
@@ -26,6 +28,7 @@ class InputField extends StatefulWidget {
     this.items,
     this.value,
     this.onChanged,
+    this.errorText,
   });
 
   @override
@@ -103,13 +106,12 @@ class InputFieldState extends State<InputField> {
       enabledBorder: _buildBorder(AppColors.offWhite),
       disabledBorder: _buildBorder(AppColors.offWhite),
       focusedBorder: _buildBorder(AppColors.primary, width: 2),
+      errorText: widget.errorText,
       errorStyle: const TextStyle(
         color: AppColors.red,
         fontWeight: FontWeight.w500,
       ),
-      errorBorder: _buildBorder(
-        AppColors.red,
-      ),
+      errorBorder: _buildBorder(AppColors.red),
       focusedErrorBorder: _buildBorder(AppColors.red, width: 2),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),

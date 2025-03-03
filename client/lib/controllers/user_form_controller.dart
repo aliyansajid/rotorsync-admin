@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rotorsync_admin/widgets/custom_snackbar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/validators.dart';
 
 class UserFormController extends ChangeNotifier {
   static const String userCreatedMessage = "User created successfully.";
@@ -13,10 +14,17 @@ class UserFormController extends ChangeNotifier {
       dotenv.env['BACKEND_URL'] ?? 'http://localhost:5000';
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  String? firstNameError;
+  String? lastNameError;
+  String? emailError;
+  String? passwordError;
+
   String role = 'Admin';
   bool isLoading = false;
 
@@ -30,11 +38,47 @@ class UserFormController extends ChangeNotifier {
       emailController.text = initialData!['email'] ?? '';
       role = initialData!['role'] ?? 'Admin';
     }
+
+    firstNameController.addListener(() => validateFirstName());
+    lastNameController.addListener(() => validateLastName());
+    emailController.addListener(() => validateEmail());
+    passwordController.addListener(() => validatePassword());
+  }
+
+  void validateFirstName() {
+    firstNameError = Validators.validateFirstName(firstNameController.text);
+    notifyListeners();
+  }
+
+  void validateLastName() {
+    lastNameError = Validators.validateLastName(lastNameController.text);
+    notifyListeners();
+  }
+
+  void validateEmail() {
+    emailError = Validators.validateEmail(emailController.text);
+    notifyListeners();
+  }
+
+  void validatePassword() {
+    passwordError = Validators.validatePassword(passwordController.text);
+    notifyListeners();
   }
 
   Future<void> submitForm(BuildContext context) async {
     if (isLoading) return;
-    if (!formKey.currentState!.validate()) return;
+
+    validateFirstName();
+    validateLastName();
+    validateEmail();
+    validatePassword();
+
+    if (firstNameError != null ||
+        lastNameError != null ||
+        emailError != null ||
+        (userId == null && passwordError != null)) {
+      return;
+    }
 
     isLoading = true;
     notifyListeners();
