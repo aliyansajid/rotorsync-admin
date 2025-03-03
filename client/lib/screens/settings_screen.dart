@@ -54,10 +54,18 @@ class SettingsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ProfileHeader(snapshot: snapshot),
-              const SizedBox(height: 20),
-              _buildSettingsOptions(context, userData),
-              const Spacer(),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ProfileHeader(snapshot: snapshot),
+                      const SizedBox(height: 20),
+                      _buildSettingsOptions(context, userData),
+                    ],
+                  ),
+                ),
+              ),
               _buildLogoutButton(context, settingsController),
             ],
           ),
