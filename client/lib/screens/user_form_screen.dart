@@ -55,9 +55,7 @@ class UserFormScreenState extends State<UserFormScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildFirstNameField(),
-                        const SizedBox(height: 16),
-                        _buildLastNameField(),
+                        _buildFullNameField(),
                         const SizedBox(height: 16),
                         _buildEmailField(),
                         const SizedBox(height: 16),
@@ -90,46 +88,25 @@ class UserFormScreenState extends State<UserFormScreen> {
         ),
       ),
       leading: IconButton(
-        icon: const Icon(LucideIcons.arrowLeft, color: AppColors.white),
+        icon: const Icon(LucideIcons.arrowLeft),
         onPressed: () => Navigator.pop(context),
       ),
     );
   }
 
-  Widget _buildFirstNameField() {
+  Widget _buildFullNameField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Label(text: "First Name"),
+        const Label(text: "Full Name"),
         const SizedBox(height: 8),
-        Consumer<UserFormController>(
+        Selector<UserFormController, TextEditingController>(
+          selector: (_, controller) => controller.fullNameController,
           builder: (context, controller, _) {
             return InputField(
-              controller: controller.firstNameController,
-              hintText: "John",
-              validator: Validators.validateFirstName,
-              errorText: controller.firstNameError,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLastNameField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Label(text: "Last Name"),
-        const SizedBox(height: 8),
-        Consumer<UserFormController>(
-          builder: (context, controller, _) {
-            return InputField(
-              controller:
-                  controller.lastNameController, // ✅ Corrected controller
-              hintText: "Doe",
-              validator: Validators.validateLastName,
-              errorText: controller.lastNameError,
+              controller: controller,
+              hintText: "John Doe",
+              validator: Validators.validateFullName,
             );
           },
         ),
@@ -143,14 +120,14 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "Email"),
         const SizedBox(height: 8),
-        Consumer<UserFormController>(
+        Selector<UserFormController, TextEditingController>(
+          selector: (_, controller) => controller.emailController,
           builder: (context, controller, _) {
             return InputField(
-              controller: controller.emailController,
+              controller: controller,
               hintText: "john.doe@example.com",
               keyboardType: TextInputType.emailAddress,
               validator: Validators.validateEmail,
-              errorText: controller.emailError,
             );
           },
         ),
@@ -164,16 +141,16 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "Password"),
         const SizedBox(height: 8),
-        Consumer<UserFormController>(
+        Selector<UserFormController, TextEditingController>(
+          selector: (_, controller) => controller.passwordController,
           builder: (context, controller, _) {
             return InputField(
-              controller: controller.passwordController,
+              controller: controller,
               hintText: widget.userId == null
                   ? "••••••••"
                   : "Enter new password (optional)",
               isPassword: true,
               validator: Validators.validatePassword,
-              errorText: controller.passwordError,
             );
           },
         ),
@@ -187,14 +164,18 @@ class UserFormScreenState extends State<UserFormScreen> {
       children: [
         const Label(text: "Role"),
         const SizedBox(height: 8),
-        InputField(
-          hintText: "Select Role",
-          items: const ['Admin', 'Pilot', 'Ground Crew'],
-          value: _controller.role,
-          onChanged: (value) {
-            if (value != null) {
-              setState(() => _controller.role = value);
-            }
+        Consumer<UserFormController>(
+          builder: (context, controller, _) {
+            return InputField(
+              hintText: "Select Role",
+              items: const ['Admin', 'Pilot', 'Ground Crew'],
+              value: controller.role,
+              onChanged: (value) {
+                if (value != null) {
+                  controller.updateRole(value);
+                }
+              },
+            );
           },
         ),
       ],
@@ -202,16 +183,15 @@ class UserFormScreenState extends State<UserFormScreen> {
   }
 
   Widget _buildSubmitButton() {
-    return Consumer<UserFormController>(
-      builder: (context, controller, _) {
+    return Selector<UserFormController, bool>(
+      selector: (_, controller) => controller.isLoading,
+      builder: (context, isLoading, _) {
         return CustomButton(
           text: widget.userId != null ? "Update" : "Create",
           icon:
               widget.userId != null ? LucideIcons.refreshCcw : LucideIcons.plus,
-          isLoading: controller.isLoading,
-          onPressed: controller.isLoading
-              ? null
-              : () => controller.submitForm(context),
+          isLoading: isLoading,
+          onPressed: isLoading ? null : () => _controller.submitForm(context),
         );
       },
     );

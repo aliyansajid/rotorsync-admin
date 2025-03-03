@@ -20,8 +20,7 @@ class MqttScreen extends StatelessWidget {
         backgroundColor: AppColors.white,
         appBar: _buildAppBar(context),
         body: GestureDetector(
-          onTap: () =>
-              FocusScope.of(context).unfocus(), // Hide keyboard on tap outside
+          onTap: () => FocusScope.of(context).unfocus(),
           child: const _MqttFormContent(),
         ),
       ),
@@ -126,7 +125,6 @@ class _MqttFormContent extends StatelessWidget {
               hintText: "broker.hivemq.com",
               enabled: !controller.fieldsDisabled,
               validator: Validators.validateBrokerUrl,
-              errorText: controller.brokerError,
             );
           },
         ),
@@ -146,10 +144,6 @@ class _MqttFormContent extends StatelessWidget {
           keyboardType: TextInputType.number,
           enabled: !controller.fieldsDisabled,
           validator: Validators.validatePort,
-          errorText: controller.portError,
-          onChanged: (value) {
-            controller.validatePort();
-          },
         ),
       ],
     );
@@ -166,10 +160,6 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "mqtt",
           enabled: !controller.fieldsDisabled,
           validator: Validators.validateBasePath,
-          errorText: controller.basePathError,
-          onChanged: (value) {
-            controller.validateBasePath();
-          },
         ),
       ],
     );
@@ -186,10 +176,6 @@ class _MqttFormContent extends StatelessWidget {
           hintText: "john",
           enabled: !controller.fieldsDisabled,
           validator: Validators.validateUsername,
-          errorText: controller.usernameError,
-          onChanged: (value) {
-            controller.validateUsername();
-          },
         ),
       ],
     );
@@ -207,10 +193,6 @@ class _MqttFormContent extends StatelessWidget {
           isPassword: true,
           enabled: !controller.fieldsDisabled,
           validator: Validators.validatePassword,
-          errorText: controller.passwordError,
-          onChanged: (value) {
-            controller.validatePassword();
-          },
         ),
       ],
     );
