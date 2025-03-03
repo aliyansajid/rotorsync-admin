@@ -10,7 +10,6 @@ import './constants/colors.dart';
 import './config/firebase_config.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-import './controllers/user_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

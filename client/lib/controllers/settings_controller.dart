@@ -11,8 +11,7 @@ class SettingsController extends ChangeNotifier {
     if (user == null) {
       return Stream.value({
         "email": "No Email",
-        "firstName": "Unknown",
-        "lastName": "User",
+        "fullName": "Unknown User",
         "uid": "No UID",
       });
     }
@@ -21,15 +20,13 @@ class SettingsController extends ChangeNotifier {
       if (doc.exists) {
         return {
           "email": doc.data()?["email"] ?? user.email ?? "No Email",
-          "firstName": doc.data()?["firstName"] ?? "Unknown",
-          "lastName": doc.data()?["lastName"] ?? "User",
+          "fullName": doc.data()?["fullName"] ?? "Unknown User",
           "uid": user.uid,
         };
       } else {
         return {
           "email": user.email ?? "No Email",
-          "firstName": "Unknown",
-          "lastName": "User",
+          "fullName": "Unknown User",
           "uid": user.uid,
         };
       }

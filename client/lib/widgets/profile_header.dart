@@ -14,12 +14,9 @@ class ProfileHeader extends StatelessWidget {
     }
 
     final data = snapshot.data!;
-    final fullName = "${data["firstName"]} ${data["lastName"]}".trim();
-    final email = data["email"]!;
-    final initials =
-        (data["firstName"]!.isNotEmpty && data["lastName"]!.isNotEmpty)
-            ? "${data["firstName"]![0]}${data["lastName"]![0]}"
-            : "?";
+    final fullName = data["fullName"] ?? "Unknown User";
+    final email = data["email"] ?? "No Email";
+    final initials = _getInitials(fullName);
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -60,6 +57,14 @@ class ProfileHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getInitials(String fullName) {
+    final List<String> nameParts = fullName.split(' ');
+    if (nameParts.isEmpty) return '?';
+    if (nameParts.length == 1) return nameParts[0][0].toUpperCase();
+    return "${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}"
+        .toUpperCase();
   }
 
   Widget _buildSkeleton() {
