@@ -119,12 +119,16 @@ class _MqttFormContent extends StatelessWidget {
       children: [
         const Label(text: "Broker URL"),
         const SizedBox(height: 8),
-        InputField(
-          controller: controller.brokerController,
-          hintText: "broker.hivemq.com",
-          enabled: !controller.fieldsDisabled,
-          validator: Validators.validateBrokerUrl,
-          errorText: controller.brokerError,
+        Consumer<MqttController>(
+          builder: (context, controller, _) {
+            return InputField(
+              controller: controller.brokerController,
+              hintText: "broker.hivemq.com",
+              enabled: !controller.fieldsDisabled,
+              validator: Validators.validateBrokerUrl,
+              errorText: controller.brokerError,
+            );
+          },
         ),
       ],
     );

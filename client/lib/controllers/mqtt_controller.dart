@@ -29,7 +29,6 @@ class MqttController extends ChangeNotifier {
   final ValueNotifier<String> messageNotifier =
       ValueNotifier("No messages received");
 
-  // Corrected: Only one unnamed constructor
   MqttController({required MQTTService mqttService})
       : _mqttService = mqttService {
     _mqttService.onConnectionStatusChange = (status) {
@@ -42,6 +41,13 @@ class MqttController extends ChangeNotifier {
     _mqttService.onMessageReceived = (topic, message) {
       messageNotifier.value = "[$topic]: $message";
     };
+
+    // Add listeners for real-time validation
+    brokerController.addListener(() => validateBroker());
+    portController.addListener(() => validatePort());
+    basePathController.addListener(() => validateBasePath());
+    usernameController.addListener(() => validateUsername());
+    passwordController.addListener(() => validatePassword());
 
     loadSavedCredentials();
   }
