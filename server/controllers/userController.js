@@ -7,10 +7,10 @@ const userController = {
    * @param {Object} res - The response object.
    */
   createUser: async (req, res) => {
-    const { firstName, lastName, email, password, role } = req.body;
+    const { fullName, email, password, role } = req.body;
 
     // Validate input
-    if (!firstName || !lastName || !email || !password || !role) {
+    if (!fullName || !email || !password || !role) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -27,8 +27,7 @@ const userController = {
       // Save user data in Firestore
       const userData = {
         uid: userRecord.uid,
-        firstName,
-        lastName,
+        fullName,
         email,
         role,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -128,6 +127,7 @@ const userController = {
    */
   deleteUsers: async (req, res) => {
     const { userIds } = req.body;
+    console.log(userIds);
 
     // Validate input
     if (!userIds || !Array.isArray(userIds)) {

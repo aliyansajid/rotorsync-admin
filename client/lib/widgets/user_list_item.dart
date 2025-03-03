@@ -4,8 +4,7 @@ import '../constants/colors.dart';
 
 class UserListItem extends StatelessWidget {
   final String userId;
-  final String firstName;
-  final String lastName;
+  final String fullName;
   final String email;
   final bool isSelected;
   final VoidCallback onTap;
@@ -14,8 +13,7 @@ class UserListItem extends StatelessWidget {
   const UserListItem({
     super.key,
     required this.userId,
-    required this.firstName,
-    required this.lastName,
+    required this.fullName,
     required this.email,
     required this.isSelected,
     required this.onTap,
@@ -24,8 +22,7 @@ class UserListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String fullName = "$firstName $lastName";
-    final String initials = _getInitials(firstName, lastName);
+    final String initials = _getInitials(fullName);
 
     return GestureDetector(
       onTap: onTap,
@@ -44,8 +41,12 @@ class UserListItem extends StatelessWidget {
     );
   }
 
-  String _getInitials(String firstName, String lastName) {
-    return "${firstName[0]}${lastName[0]}".toUpperCase();
+  String _getInitials(String fullName) {
+    final List<String> nameParts = fullName.split(' ');
+    if (nameParts.isEmpty) return '';
+    if (nameParts.length == 1) return nameParts[0][0].toUpperCase();
+    return "${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}"
+        .toUpperCase();
   }
 
   Widget _buildAvatar(String initials) {

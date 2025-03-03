@@ -80,6 +80,15 @@ class UsersScreenState extends State<UsersScreen> {
           );
         }
 
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Error loading users: ${snapshot.error}",
+              style: const TextStyle(color: AppColors.text),
+            ),
+          );
+        }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
             child: Text(
@@ -95,37 +104,19 @@ class UsersScreenState extends State<UsersScreen> {
           itemCount: users.length,
           itemBuilder: (context, index) {
             final user = users[index];
-
-            final firstName = user['firstName'] ?? 'John';
-            final lastName = user['lastName'] ?? 'Doe';
+            final fullName = user['fullName'] ?? 'John Doe';
             final email = user['email'] ?? 'No Email';
 
             return Column(
               children: [
                 UserListItem(
                   userId: user.id,
-                  firstName: firstName,
-                  lastName: lastName,
+                  fullName: fullName,
                   email: email,
                   isSelected: _controller.selectedUsers.contains(user.id),
                   onTap: () =>
                       setState(() => _controller.toggleSelection(user.id)),
-                  onEdit: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserFormScreen(
-                          userId: user.id,
-                          initialData: {
-                            'firstName': firstName,
-                            'lastName': lastName,
-                            'email': email,
-                            'role': user['role'] ?? 'Admin',
-                          },
-                        ),
-                      ),
-                    );
-                  },
+                  onEdit: () => _navigateToUserForm(context, user),
                 ),
                 if (index < users.length - 1)
                   const Padding(
@@ -141,6 +132,23 @@ class UsersScreenState extends State<UsersScreen> {
           },
         );
       },
+    );
+  }
+
+  void _navigateToUserForm(
+      BuildContext context, DocumentSnapshot<Map<String, dynamic>> user) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserFormScreen(
+          userId: user.id,
+          initialData: {
+            'fullName': user['fullName'] ?? 'John Doe',
+            'email': user['email'] ?? 'No Email',
+            'role': user['role'] ?? 'Admin',
+          },
+        ),
+      ),
     );
   }
 

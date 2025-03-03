@@ -1,17 +1,11 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:rotorsync_admin/widgets/custom_snackbar.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rotorsync_admin/services/user_service.dart';
 
 class UserFormController extends ChangeNotifier {
   static const String userCreatedMessage = "User created successfully.";
   static const String userUpdatedMessage = "User updated successfully.";
-  final String backendUrl = dotenv.env['BACKEND_URL'] ??
-      (kReleaseMode
-          ? throw Exception('BACKEND_URL not set')
-          : 'https://localhost:5000');
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController fullNameController = TextEditingController();
@@ -52,8 +46,8 @@ class UserFormController extends ChangeNotifier {
       };
 
       final response = userId == null
-          ? await _sendCreateUserRequest(userData)
-          : await _sendUpdateUserRequest(userData);
+          ? await UserService().createUser(userData)
+          : await UserService().updateUser(userId!, userData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (context.mounted) {
@@ -80,26 +74,6 @@ class UserFormController extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<http.Response> _sendCreateUserRequest(
-      Map<String, dynamic> userData) async {
-    final url = '$backendUrl/api/users/create';
-    return await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(userData),
-    );
-  }
-
-  Future<http.Response> _sendUpdateUserRequest(
-      Map<String, dynamic> userData) async {
-    final url = '$backendUrl/api/users/update/$userId';
-    return await http.put(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(userData),
-    );
   }
 
   @override
