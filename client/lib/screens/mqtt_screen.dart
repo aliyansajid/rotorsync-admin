@@ -73,7 +73,7 @@ class _MqttFormContent extends StatelessWidget {
               const SizedBox(height: 16),
               _buildPasswordField(controller),
               const SizedBox(height: 32),
-              _buildConnectButton(controller),
+              _buildConnectButton(controller, context),
               const SizedBox(height: 20),
               _buildConnectionStatus(controller),
             ],
@@ -140,7 +140,7 @@ class _MqttFormContent extends StatelessWidget {
         const SizedBox(height: 8),
         InputField(
           controller: controller.portController,
-          hintText: "1883",
+          hintText: "8884",
           keyboardType: TextInputType.number,
           enabled: !controller.fieldsDisabled,
           validator: Validators.validatePort,
@@ -188,17 +188,16 @@ class _MqttFormContent extends StatelessWidget {
         const Label(text: "Password"),
         const SizedBox(height: 8),
         InputField(
-          controller: controller.passwordController,
-          hintText: "••••••••",
-          isPassword: true,
-          enabled: !controller.fieldsDisabled,
-          validator: Validators.validatePassword,
-        ),
+            controller: controller.passwordController,
+            hintText: "••••••••",
+            isPassword: true,
+            enabled: !controller.fieldsDisabled,
+            validator: Validators.validatePassword),
       ],
     );
   }
 
-  Widget _buildConnectButton(MqttController controller) {
+  Widget _buildConnectButton(MqttController controller, BuildContext context) {
     return CustomButton(
       text: controller.isConnected ? "Disconnect" : "Connect",
       icon: controller.isConnected ? LucideIcons.powerOff : LucideIcons.power,
@@ -209,7 +208,7 @@ class _MqttFormContent extends StatelessWidget {
           : () async {
               if (!controller.isConnected) {
                 if (controller.formKey.currentState!.validate()) {
-                  await controller.connectMQTT();
+                  await controller.connectMQTT(context);
                 }
               } else {
                 controller.disconnectMQTT();

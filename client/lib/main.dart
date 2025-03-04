@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:rotorsync_admin/controllers/settings_controller.dart';
+import 'package:rotorsync_admin/controllers/mqtt_controller.dart';
 import 'package:rotorsync_admin/services/mqtt_service.dart';
 import './constants/colors.dart';
 import './config/firebase_config.dart';
@@ -15,12 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: kIsWeb ? FirebaseConfig.options : null);
   await dotenv.load(fileName: ".env");
-  await initializeServices();
   runApp(const MyApp());
-}
-
-Future<void> initializeServices() async {
-  MQTTService().initialize();
 }
 
 class MyApp extends StatelessWidget {
@@ -29,23 +25,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => SettingsController()),
-        ],
-        child: MaterialApp(
-          title: 'Admin',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-            useMaterial3: true,
-            textSelectionTheme: TextSelectionThemeData(
-              cursorColor: AppColors.primary,
-              selectionColor: AppColors.primary.withOpacity(0.5),
-              selectionHandleColor: AppColors.primary,
-            ),
+      providers: [
+        ChangeNotifierProvider(create: (_) => SettingsController()),
+        ChangeNotifierProvider(
+          create: (_) => MqttController(mqttService: MQTTService()),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Admin',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+          useMaterial3: true,
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: AppColors.primary,
+            selectionColor: AppColors.primary.withOpacity(0.5),
+            selectionHandleColor: AppColors.primary,
           ),
-          home: const AuthWrapper(),
-        ));
+        ),
+        home: const AuthWrapper(),
+      ),
+    );
   }
 }
 

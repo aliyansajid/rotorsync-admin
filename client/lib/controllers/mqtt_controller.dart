@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:rotorsync_admin/utils/validators.dart';
 import '../services/mqtt_service.dart';
 
 class MqttController extends ChangeNotifier {
   final MQTTService _mqttService;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController brokerController = TextEditingController();
   final TextEditingController portController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
@@ -11,18 +11,11 @@ class MqttController extends ChangeNotifier {
   final TextEditingController basePathController = TextEditingController();
   final TextEditingController topicController = TextEditingController();
   final TextEditingController messageController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-  String? brokerError;
-  String? portError;
-  String? basePathError;
-  String? usernameError;
-  String? passwordError;
 
   bool _isLoading = false;
   bool _fieldsDisabled = false;
-  String connectionStatus = "Disconnected ❌";
-  String _connectionType = 'tls';
+  String connectionStatus = "Disconnected";
+  String _connectionType = 'websocket';
   bool _isPublishing = false;
   bool _isSubscribing = false;
 
@@ -42,13 +35,6 @@ class MqttController extends ChangeNotifier {
       messageNotifier.value = "[$topic]: $message";
     };
 
-    // Add listeners for real-time validation
-    brokerController.addListener(() => validateBroker());
-    portController.addListener(() => validatePort());
-    basePathController.addListener(() => validateBasePath());
-    usernameController.addListener(() => validateUsername());
-    passwordController.addListener(() => validatePassword());
-
     loadSavedCredentials();
   }
 
@@ -64,31 +50,6 @@ class MqttController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void validateBroker() {
-    brokerError = Validators.validateBrokerUrl(brokerController.text);
-    notifyListeners();
-  }
-
-  void validatePort() {
-    portError = Validators.validatePort(portController.text);
-    notifyListeners();
-  }
-
-  void validateBasePath() {
-    basePathError = Validators.validateBasePath(basePathController.text);
-    notifyListeners();
-  }
-
-  void validateUsername() {
-    usernameError = Validators.validateUsername(usernameController.text);
-    notifyListeners();
-  }
-
-  void validatePassword() {
-    passwordError = Validators.validatePassword(passwordController.text);
-    notifyListeners();
-  }
-
   Future<void> loadSavedCredentials() async {
     try {
       final credentials = await _mqttService.loadSavedCredentials();
@@ -100,12 +61,12 @@ class MqttController extends ChangeNotifier {
         passwordController.text = credentials['password'] ?? '';
         basePathController.text = credentials['basePath'] ?? '';
         _fieldsDisabled = credentials['isConnected'] == true;
-        _connectionType = credentials['connectionType'] ?? 'tls';
+        _connectionType = credentials['connectionType'] ?? 'websocket';
 
         if (credentials['isConnected'] == true) {
           _mqttService.setupClient(
             brokerController.text.trim(),
-            int.tryParse(portController.text) ?? 8883,
+            int.parse(portController.text),
             _connectionType,
             basePathController.text.trim(),
           );
@@ -113,49 +74,35 @@ class MqttController extends ChangeNotifier {
             usernameController.text.trim(),
             passwordController.text.trim(),
           );
-          connectionStatus = "Connected ✅";
-        } else {
-          connectionStatus = "Disconnected ❌";
         }
-      } else {
-        connectionStatus = "Disconnected ❌";
       }
     } catch (e) {
-      connectionStatus = "Error loading credentials ❌";
+      connectionStatus = "Error loading credentials";
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> connectMQTT() async {
+  Future<void> connectMQTT(BuildContext context) async {
     _isLoading = true;
     _fieldsDisabled = true;
     notifyListeners();
 
     String broker = brokerController.text.trim();
-    int port = int.tryParse(portController.text) ?? 8883;
+    int port = int.tryParse(portController.text) ?? 8884;
     String username = usernameController.text.trim();
     String password = passwordController.text.trim();
     String basePath = basePathController.text.trim();
 
-    if (_connectionType == 'websocket' && !basePath.startsWith('/')) {
-      basePath = '/$basePath';
-      basePathController.text = basePath;
-    }
-
     try {
       _mqttService.setupClient(broker, port, _connectionType, basePath);
       await _mqttService.connect(username, password);
+
       if (_mqttService.isConnected) {
         await _mqttService.saveCredentials(
             broker, port, username, password, _connectionType, basePath);
-        connectionStatus = "Connected ✅";
-      } else {
-        connectionStatus = "Connection Failed ❌";
       }
-    } catch (e) {
-      connectionStatus = "Connection Error ❌: $e";
     } finally {
       _isLoading = false;
       _fieldsDisabled = _mqttService.isConnected;
@@ -167,7 +114,7 @@ class MqttController extends ChangeNotifier {
     _mqttService.disconnect();
     _fieldsDisabled = false;
     _isLoading = false;
-    connectionStatus = "Disconnected ❌";
+    connectionStatus = "Disconnected";
     notifyListeners();
   }
 

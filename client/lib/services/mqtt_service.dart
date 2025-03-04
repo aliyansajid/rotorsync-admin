@@ -22,6 +22,7 @@ class MQTTService {
 
   late MqttServerClient _client;
   bool isConnected = false;
+  bool _disconnectedDueToError = false;
   Function(String)? onConnectionStatusChange;
   Function(String, String)? onMessageReceived;
 
@@ -34,7 +35,7 @@ class MQTTService {
     if (credentials['broker'].isNotEmpty &&
         credentials['isConnected'] == true) {
       setupClient(credentials['broker'], credentials['port'],
-          credentials['connectionType']);
+          credentials['connectionType'], credentials['basePath']);
       await connect(credentials['username'], credentials['password']);
     }
   }
@@ -47,12 +48,12 @@ class MQTTService {
         var data = snapshot.data() as Map<String, dynamic>;
         return {
           'broker': data['broker'] ?? '',
-          'port': data['port'] ?? 8883,
-          'basePath': data['basePath'] ?? '/mqtt',
+          'port': data['port'] ?? 8884,
+          'basePath': data['basePath'] ?? 'mqtt',
           'username': data['username'] ?? '',
           'password': data['password'] ?? '',
           'isConnected': data['isConnected'] ?? false,
-          'connectionType': data['connectionType'] ?? 'tls',
+          'connectionType': data['connectionType'] ?? 'websocket',
         };
       }
     } catch (e) {
@@ -60,18 +61,18 @@ class MQTTService {
     }
     return {
       'broker': '',
-      'port': 8883,
+      'port': 8884,
       'username': '',
       'basePath': '',
       'password': '',
       'isConnected': false,
-      'connectionType': 'tls',
+      'connectionType': 'websocket',
     };
   }
 
   Future<void> saveCredentials(String broker, int port, String username,
       String password, String connectionType,
-      [String basePath = "/mqtt"]) async {
+      [String basePath = "mqtt"]) async {
     await _firestore.collection('mqtt').doc(_docId).set({
       'broker': broker,
       'port': port,
@@ -90,14 +91,13 @@ class MQTTService {
         .update({'isConnected': status});
   }
 
-  void setupClient(String broker, int port, String connectionType,
-      [String basePath = "mqtt"]) {
+  void setupClient(
+      String broker, int port, String connectionType, String basePath) {
     var uuid = const Uuid();
     String clientId = uuid.v4();
 
     if (connectionType == 'websocket') {
-      String formattedBasePath =
-          basePath.startsWith('/') ? basePath : '/$basePath';
+      String formattedBasePath = '/$basePath';
       String websocketUrl = "wss://$broker:$port$formattedBasePath";
       _client = MqttServerClient.withPort(websocketUrl, clientId, port);
       _client.useWebSocket = true;
@@ -115,12 +115,15 @@ class MQTTService {
 
     _client.onDisconnected = () {
       isConnected = false;
-      onConnectionStatusChange?.call("Disconnected ❌");
+      if (!_disconnectedDueToError) {
+        onConnectionStatusChange?.call("Disconnected");
+      }
+      _disconnectedDueToError = false;
     };
 
     _client.onConnected = () {
       isConnected = true;
-      onConnectionStatusChange?.call("Connected ✅");
+      onConnectionStatusChange?.call("Connected");
     };
 
     listenToMessages();
@@ -139,31 +142,63 @@ class MQTTService {
     });
   }
 
-  Future<void> connect(String username, String password) async {
+  Future<String?> connect(String username, String password) async {
     try {
-      onConnectionStatusChange?.call("Connecting... ⏳");
+      onConnectionStatusChange?.call("Connecting...");
       await _client.connect(username, password);
 
       if (_client.connectionStatus!.state == MqttConnectionState.connected) {
         isConnected = true;
-        onConnectionStatusChange?.call("Connected ✅");
-      } else {
-        isConnected = false;
-        onConnectionStatusChange?.call("Connection Failed ❌");
-        _client.disconnect();
+        onConnectionStatusChange?.call("Connected");
+        return null;
       }
     } catch (e) {
       isConnected = false;
-      onConnectionStatusChange?.call("Connection Error ❌: $e");
+
+      final returnCode = _client.connectionStatus?.returnCode;
+
+      if (returnCode == MqttConnectReturnCode.notAuthorized) {
+        onConnectionStatusChange?.call("Invalid credentials");
+      } else if (returnCode == MqttConnectReturnCode.brokerUnavailable) {
+        onConnectionStatusChange?.call("Broker is unavailable");
+      } else if (returnCode == MqttConnectReturnCode.badUsernameOrPassword) {
+        onConnectionStatusChange?.call("Incorrect username or password");
+      } else if (returnCode == MqttConnectReturnCode.identifierRejected) {
+        onConnectionStatusChange?.call("Client identifier rejected");
+      } else if (returnCode ==
+          MqttConnectReturnCode.unacceptedProtocolVersion) {
+        onConnectionStatusChange?.call("Unacceptable protocol version");
+      } else if (returnCode == MqttConnectReturnCode.noneSpecified) {
+        onConnectionStatusChange
+            ?.call("Something went wrong. Please try again.");
+      } else {
+        String errorMessage = "An unexpected error occurred: $e";
+
+        if (e.toString().contains("SocketException")) {
+          errorMessage = "Unable to connect to the broker. Check your network.";
+        } else if (e.toString().contains("TimeoutException")) {
+          errorMessage =
+              "Connection timed out. Check the broker address and port.";
+        } else if (e.toString().contains("Connection refused")) {
+          errorMessage = "Connection refused by the broker.";
+        }
+
+        onConnectionStatusChange?.call(errorMessage);
+      }
+
+      _disconnectedDueToError = true;
       _client.disconnect();
+      return "Connection failed";
     }
+
+    return "Connection failed";
   }
 
   void disconnect() {
     _client.disconnect();
     isConnected = false;
     _subscribedTopics.clear();
-    onConnectionStatusChange?.call("Disconnected ❌");
+    onConnectionStatusChange?.call("Disconnected");
   }
 
   void publishMessage(String topic, String message) {
