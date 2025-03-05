@@ -208,7 +208,7 @@ class _MqttFormContent extends StatelessWidget {
           : () async {
               if (!controller.isConnected) {
                 if (controller.formKey.currentState!.validate()) {
-                  await controller.connectMQTT(context);
+                  await controller.connectMQTT();
                 }
               } else {
                 controller.disconnectMQTT();

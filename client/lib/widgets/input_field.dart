@@ -56,6 +56,7 @@ class InputFieldState extends State<InputField> {
       validator: widget.validator,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       enabled: widget.enabled,
+      onChanged: widget.onChanged,
       decoration: _buildInputDecoration(
         suffixIcon: widget.isPassword ? _buildPasswordVisibilityToggle() : null,
       ),

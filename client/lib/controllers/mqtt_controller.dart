@@ -84,7 +84,7 @@ class MqttController extends ChangeNotifier {
     }
   }
 
-  Future<void> connectMQTT(BuildContext context) async {
+  Future<void> connectMQTT() async {
     _isLoading = true;
     _fieldsDisabled = true;
     notifyListeners();

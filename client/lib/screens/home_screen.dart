@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:rotorsync_admin/screens/ble_devices_screen.dart';
 import 'package:rotorsync_admin/screens/settings_screen.dart';
 import 'package:rotorsync_admin/screens/users_screen.dart';
-import '../constants/colors.dart';
+import 'package:rotorsync_admin/constants/colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,7 +18,7 @@ class HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const _HomePage(),
     const UsersScreen(),
-    const _PlaceholderScreen(title: 'Devices Screen'),
+    const BleDevicesScreen(),
     const SettingsScreen(),
   ];
 
@@ -125,24 +126,6 @@ class _HomePage extends StatelessWidget {
       child: const Text(
         'Home Screen',
         style: TextStyle(fontSize: 20),
-      ),
-    );
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-
-  const _PlaceholderScreen({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.white,
-      alignment: Alignment.center,
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 20),
       ),
     );
   }
